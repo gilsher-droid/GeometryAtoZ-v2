@@ -16,6 +16,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const progress = lessonEngine.getProgress();
+    const isPointStep = step.interaction === "createPoint";
 
     lessonContainer.innerHTML = `
       <section class="lesson-step">
@@ -40,52 +41,91 @@ document.addEventListener("DOMContentLoaded", () => {
 
           ${step.text ? `<p>${step.text}</p>` : ""}
 
-          ${step.prompt ? `
-            <div class="teacher-prompt">
-              <strong>שאלת חשיבה:</strong>
-              <p>${step.prompt}</p>
-            </div>
-          ` : ""}
+          ${
+            isPointStep
+              ? `
+                <div class="interaction-area">
+                  <p class="interaction-instruction">
+                    לחץ בתוך השטח כדי ליצור נקודה.
+                  </p>
 
-          ${step.claimPrompt ? `
-            <div class="claim-box">
-              <label for="claim-input">${step.claimPrompt}</label>
-              <textarea
-                id="claim-input"
-                rows="3"
-                placeholder="כתוב כאן את הטענה שלך"
-              ></textarea>
-            </div>
-          ` : ""}
+                  <div id="point-canvas" class="point-canvas"></div>
 
-          ${step.justificationPrompt ? `
-            <div class="justification-box">
-              <label for="justification-input">
-                ${step.justificationPrompt}
-              </label>
+                  <p id="point-feedback" class="interaction-feedback">
+                    עדיין לא נוצרה נקודה.
+                  </p>
+                </div>
+              `
+              : ""
+          }
 
-              <textarea
-                id="justification-input"
-                rows="3"
-                placeholder="כתוב כאן את הצידוק שלך"
-              ></textarea>
-            </div>
-          ` : ""}
+          ${
+            step.prompt
+              ? `
+                <div class="teacher-prompt">
+                  <strong>שאלת חשיבה:</strong>
+                  <p>${step.prompt}</p>
+                </div>
+              `
+              : ""
+          }
 
-          ${step.reflection ? `
-            <div class="reflection-box">
-              <strong>שאלה למחשבה:</strong>
-              <p>${step.reflection}</p>
-            </div>
-          ` : ""}
+          ${
+            step.claimPrompt
+              ? `
+                <div class="claim-box">
+                  <label for="claim-input">${step.claimPrompt}</label>
 
-          ${step.concepts ? `
-            <ul class="concept-list">
-              ${step.concepts
-                .map(concept => `<li>${concept}</li>`)
-                .join("")}
-            </ul>
-          ` : ""}
+                  <textarea
+                    id="claim-input"
+                    rows="3"
+                    placeholder="כתוב כאן את הטענה שלך"
+                  ></textarea>
+                </div>
+              `
+              : ""
+          }
+
+          ${
+            step.justificationPrompt
+              ? `
+                <div class="justification-box">
+                  <label for="justification-input">
+                    ${step.justificationPrompt}
+                  </label>
+
+                  <textarea
+                    id="justification-input"
+                    rows="3"
+                    placeholder="כתוב כאן את הצידוק שלך"
+                  ></textarea>
+                </div>
+              `
+              : ""
+          }
+
+          ${
+            step.reflection
+              ? `
+                <div class="reflection-box">
+                  <strong>שאלה למחשבה:</strong>
+                  <p>${step.reflection}</p>
+                </div>
+              `
+              : ""
+          }
+
+          ${
+            step.concepts
+              ? `
+                <ul class="concept-list">
+                  ${step.concepts
+                    .map((concept) => `<li>${concept}</li>`)
+                    .join("")}
+                </ul>
+              `
+              : ""
+          }
         </div>
 
         <div class="lesson-navigation">
@@ -107,6 +147,33 @@ document.addEventListener("DOMContentLoaded", () => {
       </section>
     `;
 
+    if (isPointStep) {
+      const pointCanvas = document.getElementById("point-canvas");
+      const pointFeedback = document.getElementById("point-feedback");
+
+      if (interactionEngine.isCompleted("createPoint")) {
+        pointFeedback.textContent = "יצרת נקודה. עכשיו אפשר להמשיך.";
+      }
+
+      pointCanvas.addEventListener("click", (event) => {
+        pointCanvas.innerHTML = "";
+
+        const rect = pointCanvas.getBoundingClientRect();
+
+        const point = document.createElement("div");
+        point.className = "created-point";
+
+        point.style.left = `${event.clientX - rect.left}px`;
+        point.style.top = `${event.clientY - rect.top}px`;
+
+        pointCanvas.appendChild(point);
+
+        pointFeedback.textContent = "יצרת נקודה. עכשיו אפשר להמשיך.";
+
+        interactionEngine.complete("createPoint");
+      });
+    }
+
     const previousButton = document.getElementById("previous-button");
     const nextButton = document.getElementById("next-button");
 
@@ -116,10 +183,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     nextButton.addEventListener("click", () => {
+      if (
+        step.interaction === "createPoint" &&
+        !interactionEngine.isCompleted("createPoint")
+      ) {
+        alert("כדי להמשיך, צור קודם נקודה בתוך שטח הפעילות.");
+        return;
+      }
+
       if (lessonEngine.isLastStep()) {
         lessonContainer.innerHTML = `
           <section class="lesson-complete">
             <h2>סיימת את השיעור הראשון</h2>
+
             <p>
               בנית את מפתח החשיבה הראשון:
               <strong>${lesson01.thinkingKey}</strong>
@@ -134,6 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document
           .getElementById("restart-button")
           .addEventListener("click", () => {
+            interactionEngine.reset();
             lessonEngine.loadLesson(lesson01);
             renderStep();
           });
