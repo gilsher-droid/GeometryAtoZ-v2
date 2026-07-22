@@ -279,3 +279,24 @@ button:disabled {
   font-weight: 700;
   pointer-events: none;
 }
+.geometry-ray {
+  height: 4px;
+  background: #0c4a6e;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.geometry-ray-preview {
+  opacity: 0.55;
+}
+
+.geometry-ray-arrow {
+  color: #0c4a6e;
+  font-size: 18px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.ray-construction-canvas {
+  cursor: crosshair;
+}
