@@ -30,6 +30,7 @@ class GeometryCanvas {
         id="${this.id}"
         class="geometry-canvas ${this.className}"
         role="application"
+        tabindex="0"
         aria-label="משטח גיאומטרי אינטראקטיבי"
         style="
           position: relative;
@@ -107,6 +108,13 @@ class GeometryCanvas {
   }
 
   getRelativePosition(event) {
+    if (!this.element) {
+      return {
+        x: 0,
+        y: 0
+      };
+    }
+
     const rect =
       this.element
         .getBoundingClientRect();
@@ -120,7 +128,10 @@ class GeometryCanvas {
   setSinglePoint(x, y) {
     this.clear();
 
-    this.addPoint(x, y);
+    return this.addPoint(
+      x,
+      y
+    );
   }
 
   addPoint(x, y, options = {}) {
