@@ -5,15 +5,21 @@ class ResponseBox {
     placeholder = "כתוב כאן...",
     value = "",
     buttonText = "שמור תשובה",
-    onSave = () => {}
+    showSaveButton = true,
+    onSave = () => {},
+    onChange = () => {}
   }) {
     this.id = id;
     this.label = label;
     this.placeholder = placeholder;
     this.value = value;
     this.savedValue = value;
+
     this.buttonText = buttonText;
+    this.showSaveButton = showSaveButton;
+
     this.onSave = onSave;
+    this.onChange = onChange;
   }
 
   render() {
@@ -34,24 +40,48 @@ class ResponseBox {
           placeholder="${this.placeholder}"
         >${this.escape(this.value)}</textarea>
 
-        <div class="response-actions">
+        ${
+          this.showSaveButton
+            ? `
+              <div class="response-actions">
 
-          <button
-            id="${this.id}-save"
-            type="button"
-            ${isSaved ? "disabled" : ""}
-          >
-            ${isSaved ? "✓ התשובה נשמרה" : this.buttonText}
-          </button>
+                <button
+                  id="${this.id}-save"
+                  type="button"
+                  ${isSaved ? "disabled" : ""}
+                >
+                  ${
+                    isSaved
+                      ? "✓ התשובה נשמרה"
+                      : this.buttonText
+                  }
+                </button>
 
-          <span
-            id="${this.id}-status"
-            class="response-status"
-          >
-            ${isSaved ? "התשובה נשמרה." : ""}
-          </span>
+                <span
+                  id="${this.id}-status"
+                  class="response-status"
+                >
+                  ${
+                    isSaved
+                      ? "התשובה נשמרה."
+                      : ""
+                  }
+                </span>
 
-        </div>
+              </div>
+            `
+            : `
+              <div class="response-actions">
+
+                <span
+                  id="${this.id}-status"
+                  class="response-status"
+                >
+                </span>
+
+              </div>
+            `
+        }
 
       </div>
     `;
@@ -59,48 +89,98 @@ class ResponseBox {
 
   attach() {
     const textarea =
-      document.getElementById(this.id);
+      document.getElementById(
+        this.id
+      );
 
     const button =
-      document.getElementById(`${this.id}-save`);
+      document.getElementById(
+        `${this.id}-save`
+      );
 
     const status =
-      document.getElementById(`${this.id}-status`);
+      document.getElementById(
+        `${this.id}-status`
+      );
 
-    if (!textarea || !button || !status) {
+    if (!textarea || !status) {
       return;
     }
 
-    textarea.addEventListener("input", () => {
-      this.value = textarea.value;
+    textarea.addEventListener(
+      "input",
+      () => {
+        this.value =
+          textarea.value;
 
-      if (this.value !== this.savedValue) {
-        button.disabled = false;
-        button.textContent = this.buttonText;
-        status.textContent = "יש שינויים שעדיין לא נשמרו.";
+        this.onChange(
+          this.value
+        );
+
+        if (!this.showSaveButton) {
+          status.textContent =
+            "נשמר אוטומטית";
+
+          return;
+        }
+
+        if (
+          this.value !==
+          this.savedValue
+        ) {
+          button.disabled =
+            false;
+
+          button.textContent =
+            this.buttonText;
+
+          status.textContent =
+            "יש שינויים שעדיין לא נשמרו.";
+        }
       }
-    });
+    );
 
-    button.addEventListener("click", () => {
-      const value = textarea.value.trim();
+    if (
+      !this.showSaveButton
+    ) {
+      return;
+    }
 
-      if (!value) {
+    button.addEventListener(
+      "click",
+      () => {
+        const value =
+          textarea.value.trim();
+
+        if (!value) {
+          status.textContent =
+            "כתוב תשובה לפני השמירה.";
+
+          textarea.focus();
+
+          return;
+        }
+
+        this.savedValue =
+          value;
+
+        this.value =
+          value;
+
+        button.disabled =
+          true;
+
+        button.textContent =
+          "✓ התשובה נשמרה";
+
         status.textContent =
-          "כתוב תשובה לפני השמירה.";
-        textarea.focus();
-        return;
+          "התשובה נשמרה.";
+
+        this.onSave(
+          value
+        );
       }
-
-      this.savedValue = value;
-      this.value = value;
-
-      button.disabled = true;
-      button.textContent = "✓ התשובה נשמרה";
-
-      status.textContent = "התשובה נשמרה.";
-
-      this.onSave(value);
-    });
+    );
   }
 
   escape(text) {
@@ -113,4 +193,5 @@ class ResponseBox {
   }
 }
 
-window.ResponseBox = ResponseBox;
+window.ResponseBox =
+  ResponseBox;
