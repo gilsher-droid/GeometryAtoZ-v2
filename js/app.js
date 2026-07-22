@@ -6,50 +6,55 @@ document.addEventListener(
         "lesson-container"
       );
 
-
-    const savedPointPositions = {};
-
     lessonEngine.loadLesson(
       lesson01
     );
 
+    /*
+      Demo identity foundation.
 
-
+      בעתיד הנתונים האלה יגיעו
+      ממערכת התחברות או מבחירת תלמיד.
+    */
     const teacher =
-  new Teacher({
-    id: "teacher-demo",
-    name: "Demo Teacher"
-  });
+      new Teacher({
+        id: "teacher-demo",
+        name: "Demo Teacher"
+      });
 
-const student =
-  new Student({
-    id: "student-demo",
-    firstName: "Demo",
-    lastName: "Student"
-  });
+    const student =
+      new Student({
+        id: "student-demo",
+        firstName: "Demo",
+        lastName: "Student",
+        teacherId: teacher.id
+      });
 
-const book =
-  new Book({
-    id: "geometry-book",
-    title: "Geometry A to Z",
-    ownerId: student.id,
-    teacherId: teacher.id
-  });
+    const book =
+      new Book({
+        id: "geometry-book",
+        title: "Geometry A to Z",
+        ownerId: student.id,
+        teacherId: teacher.id
+      });
 
-const bookManager =
-  new BookManager();
+    const bookManager =
+      new BookManager();
 
-bookManager.initialize({
-  teacher,
-  student,
-  book
-});
+    bookManager.initialize({
+      teacher,
+      student,
+      book
+    });
 
-
-    lessonState.initialize(
+    const lessonId =
       lesson01.id ||
-      "geometry-lesson-01"
-    );
+      "geometry-lesson-01";
+
+    let lessonState =
+      bookManager.getLessonState(
+        lessonId
+      );
 
     function getStepKey(step) {
       return (
@@ -58,21 +63,33 @@ bookManager.initialize({
       );
     }
 
-    const activityRenderer =
-      new ActivityRenderer({
-        lessonState,
-        getStepKey
-      });
+    function createActivityRenderer() {
+      const renderer =
+        new ActivityRenderer({
+          lessonState,
+          getStepKey
+        });
 
-    activityRenderer.register(
-      "question",
-      QuestionActivity
-    );
+      renderer.register(
+        "question",
+        QuestionActivity
+      );
 
-    activityRenderer.register(
-      "claim-justification",
-      ClaimJustificationActivity
-    );
+      renderer.register(
+        "claim-justification",
+        ClaimJustificationActivity
+      );
+
+      renderer.register(
+        "construction",
+        ConstructionActivity
+      );
+
+      return renderer;
+    }
+
+    let activityRenderer =
+      createActivityRenderer();
 
     function renderStep() {
       const step =
@@ -96,13 +113,6 @@ bookManager.initialize({
 
       const progress =
         lessonEngine.getProgress();
-
-      const stepKey =
-        getStepKey(step);
-
-      const isPointStep =
-        step.interaction ===
-        "createPoint";
 
       const usesActivityRenderer =
         activityRenderer.has(
@@ -146,44 +156,13 @@ bookManager.initialize({
               מתוך ${lesson01.steps.length}
             </p>
 
-            <h2>${step.title}</h2>
+            <h2>
+              ${step.title}
+            </h2>
 
             ${
               step.text
                 ? `<p>${step.text}</p>`
-                : ""
-            }
-
-            ${
-              isPointStep
-                ? `
-                  <div class="interaction-area">
-                    <p
-                      class="interaction-instruction"
-                    >
-                      לחץ בתוך השטח כדי ליצור נקודה.
-                    </p>
-
-                    <div
-                      id="point-canvas"
-                      class="point-canvas"
-                    ></div>
-
-                    <p
-                      id="point-feedback"
-                      class="interaction-feedback"
-                    >
-                      ${
-                        interactionEngine
-                          .isCompleted(
-                            `createPoint-${stepKey}`
-                          )
-                          ? "יצרת נקודה. עכשיו אפשר להמשיך."
-                          : "עדיין לא נוצרה נקודה."
-                      }
-                    </p>
-                  </div>
-                `
                 : ""
             }
 
@@ -256,94 +235,12 @@ bookManager.initialize({
         activityRenderer.attach();
       }
 
-      if (isPointStep) {
-        attachPointInteraction(
-          stepKey
-        );
-      }
-
       attachNavigation({
-        stepKey,
-        isPointStep,
         usesActivityRenderer
       });
     }
 
-    function attachPointInteraction(
-      stepKey
-    ) {
-      const interactionKey =
-        `createPoint-${stepKey}`;
-
-      const pointCanvas =
-        document.getElementById(
-          "point-canvas"
-        );
-
-      const pointFeedback =
-        document.getElementById(
-          "point-feedback"
-        );
-
-      if (
-        !pointCanvas ||
-        !pointFeedback
-      ) {
-        return;
-      }
-
-      const savedPosition =
-        savedPointPositions[stepKey];
-
-      if (savedPosition) {
-        drawPoint(
-          pointCanvas,
-          savedPosition.x,
-          savedPosition.y
-        );
-      }
-
-      pointCanvas.addEventListener(
-        "click",
-        (event) => {
-          const rect =
-            pointCanvas
-              .getBoundingClientRect();
-
-          const x =
-            event.clientX -
-            rect.left;
-
-          const y =
-            event.clientY -
-            rect.top;
-
-          savedPointPositions[
-            stepKey
-          ] = {
-            x,
-            y
-          };
-
-          drawPoint(
-            pointCanvas,
-            x,
-            y
-          );
-
-          pointFeedback.textContent =
-            "יצרת נקודה. עכשיו אפשר להמשיך.";
-
-          interactionEngine.complete(
-            interactionKey
-          );
-        }
-      );
-    }
-
     function attachNavigation({
-      stepKey,
-      isPointStep,
       usesActivityRenderer
     }) {
       const previousButton =
@@ -356,104 +253,67 @@ bookManager.initialize({
           "next-button"
         );
 
-      previousButton.addEventListener(
-        "click",
-        () => {
-          lessonEngine.previousStep();
+      if (previousButton) {
+        previousButton.addEventListener(
+          "click",
+          () => {
+            lessonEngine.previousStep();
 
-          lessonState.setCurrentStep(
-            lessonEngine
-              .currentStepIndex
-          );
+            lessonState.setCurrentStep(
+              lessonEngine
+                .currentStepIndex
+            );
 
-          renderStep();
-        }
-      );
+            renderStep();
+          }
+        );
+      }
 
-      nextButton.addEventListener(
-        "click",
-        () => {
-          if (isPointStep) {
-            const interactionKey =
-              `createPoint-${stepKey}`;
-
+      if (nextButton) {
+        nextButton.addEventListener(
+          "click",
+          () => {
             if (
-              !interactionEngine
-                .isCompleted(
-                  interactionKey
-                )
+              usesActivityRenderer &&
+              !activityRenderer.validate()
             ) {
               alert(
-                "כדי להמשיך, צור קודם נקודה בתוך שטח הפעילות."
+                "כדי להמשיך, יש להשלים את הפעילות ולשמור את התשובה או הבנייה."
               );
+
+              const currentActivity =
+                activityRenderer
+                  .getCurrentActivity();
+
+              if (
+                currentActivity &&
+                typeof currentActivity
+                  .focus === "function"
+              ) {
+                currentActivity.focus();
+              }
 
               return;
             }
-          }
-
-          if (
-            usesActivityRenderer &&
-            !activityRenderer.validate()
-          ) {
-            alert(
-              "כדי להמשיך, כתוב תשובה ושמור את הגרסה האחרונה שלה."
-            );
-
-            const currentActivity =
-              activityRenderer
-                .getCurrentActivity();
 
             if (
-              currentActivity &&
-              typeof currentActivity
-                .focus === "function"
+              lessonEngine.isLastStep()
             ) {
-              currentActivity.focus();
+              renderCompletionScreen();
+              return;
             }
 
-            return;
+            lessonEngine.nextStep();
+
+            lessonState.setCurrentStep(
+              lessonEngine
+                .currentStepIndex
+            );
+
+            renderStep();
           }
-
-          if (
-            lessonEngine.isLastStep()
-          ) {
-            renderCompletionScreen();
-            return;
-          }
-
-          lessonEngine.nextStep();
-
-          lessonState.setCurrentStep(
-            lessonEngine
-              .currentStepIndex
-          );
-
-          renderStep();
-        }
-      );
-    }
-
-    function drawPoint(
-      pointCanvas,
-      x,
-      y
-    ) {
-      pointCanvas.innerHTML = "";
-
-      const point =
-        document.createElement(
-          "div"
         );
-
-      point.className =
-        "created-point";
-
-      point.style.left = `${x}px`;
-      point.style.top = `${y}px`;
-
-      pointCanvas.appendChild(
-        point
-      );
+      }
     }
 
     function renderCompletionScreen() {
@@ -482,40 +342,50 @@ bookManager.initialize({
         </section>
       `;
 
-      document
-        .getElementById(
+      const restartButton =
+        document.getElementById(
           "restart-button"
-        )
-        .addEventListener(
-          "click",
-          () => {
-            Object
-              .keys(
-                savedPointPositions
-              )
-              .forEach((key) => {
-                delete savedPointPositions[
-                  key
-                ];
-              });
-
-   interactionEngine.reset();
-
-book.lessons = {};
-
-lessonEngine.loadLesson(
-    lesson01
-);
-
-const newLessonState =
-  bookManager.getLessonState(
-    lesson01.id ||
-    "geometry-lesson-01"
-);
-
-            renderStep();
-          }
         );
+
+      restartButton.addEventListener(
+        "click",
+        () => {
+          activityRenderer
+            .destroyCurrentActivity();
+
+          interactionEngine.reset();
+
+          /*
+            מחיקת מצבי השיעורים
+            מתוך הספר האישי.
+          */
+          book.lessons = {};
+          book.touch();
+
+          lessonEngine.loadLesson(
+            lesson01
+          );
+
+          /*
+            BookManager יוצר כעת
+            LessonState חדש.
+          */
+          lessonState =
+            bookManager
+              .getLessonState(
+                lessonId
+              );
+
+          /*
+            ActivityRenderer חדש מקבל
+            את LessonState החדש.
+          */
+          activityRenderer =
+            createActivityRenderer();
+
+          renderStep();
+        }
+      );
     }
 
     renderStep();
