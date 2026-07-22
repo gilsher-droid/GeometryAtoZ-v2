@@ -80,20 +80,20 @@ document.addEventListener(
         ClaimJustificationActivity
       );
 
-renderer.register(
-  "construction",
-  ConstructionActivity
-);
+      renderer.register(
+        "construction",
+        ConstructionActivity
+      );
 
-renderer.register(
-  "ray-construction",
-  RayConstructionActivity
-);
+      renderer.register(
+        "ray-construction",
+        RayConstructionActivity
+      );
 
-renderer.register(
-  "angle-construction",
-  AngleConstructionActivity
-);
+      renderer.register(
+        "angle-construction",
+        AngleConstructionActivity
+      );
 
       return renderer;
     }
@@ -283,17 +283,35 @@ renderer.register(
         nextButton.addEventListener(
           "click",
           () => {
+            const currentActivity =
+              activityRenderer
+                .getCurrentActivity();
+
+            /*
+              לחיצה על "הבא" מבצעת קודם
+              את פעולת השמירה של הפעילות,
+              אם קיימת מתודת save.
+            */
+            if (
+              usesActivityRenderer &&
+              currentActivity &&
+              typeof currentActivity
+                .save === "function"
+            ) {
+              currentActivity.save();
+            }
+
+            /*
+              לאחר השמירה מתבצעת בדיקה
+              האם הפעילות הושלמה.
+            */
             if (
               usesActivityRenderer &&
               !activityRenderer.validate()
             ) {
               alert(
-                "כדי להמשיך, יש להשלים את הפעילות ולשמור את התשובה או הבנייה."
+                "כדי להמשיך, יש להשלים את הפעילות."
               );
-
-              const currentActivity =
-                activityRenderer
-                  .getCurrentActivity();
 
               if (
                 currentActivity &&
@@ -306,6 +324,10 @@ renderer.register(
               return;
             }
 
+            /*
+              אם זה השלב האחרון,
+              מסיימים את השיעור.
+            */
             if (
               lessonEngine.isLastStep()
             ) {
@@ -313,6 +335,10 @@ renderer.register(
               return;
             }
 
+            /*
+              רק לאחר השמירה והבדיקה
+              עוברים לשלב הבא.
+            */
             lessonEngine.nextStep();
 
             lessonState.setCurrentStep(
