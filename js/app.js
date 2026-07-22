@@ -96,9 +96,9 @@ document.addEventListener(
       );
 
       renderer.register(
-  "measure-angle",
-  MeasureAngleActivity
-);
+        "measure-angle",
+        MeasureAngleActivity
+      );
 
       return renderer;
     }

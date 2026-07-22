@@ -35,6 +35,14 @@ class GeometryCanvas {
     this.rayOriginPointId = null;
     this.activeRayStart = null;
     this.previewRayElement = null;
+
+    this.protractorElement = null;
+    this.protractorState = null;
+    this.protractorChangeHandler = null;
+    this.protractorInteraction = null;
+    this.boundProtractorPointerDown = null;
+    this.boundProtractorPointerMove = null;
+    this.boundProtractorPointerUp = null;
   }
 
   render() {
@@ -956,6 +964,609 @@ class GeometryCanvas {
       );
   }
 
+  drawProtractor(
+    protractor,
+    {
+      onChange = null
+    } = {}
+  ) {
+    this.ensureAttached();
+    this.removeProtractor();
+
+    this.protractorState =
+      protractor instanceof Protractor
+        ? protractor
+        : new Protractor(
+            protractor
+          );
+
+    this.protractorChangeHandler =
+      typeof onChange ===
+      "function"
+        ? onChange
+        : null;
+
+    const svgNamespace =
+      "http://www.w3.org/2000/svg";
+
+    const svg =
+      document.createElementNS(
+        svgNamespace,
+        "svg"
+      );
+
+    svg.classList.add(
+      "geometry-protractor"
+    );
+    svg.dataset.protractorId =
+      this.protractorState.id;
+    svg.setAttribute(
+      "aria-label",
+      "מד זווית אינטראקטיבי"
+    );
+    svg.setAttribute(
+      "role",
+      "img"
+    );
+
+    const group =
+      document.createElementNS(
+        svgNamespace,
+        "g"
+      );
+
+    group.classList.add(
+      "geometry-protractor-content"
+    );
+
+    const radius =
+      this.protractorState.radius;
+
+    const body =
+      document.createElementNS(
+        svgNamespace,
+        "path"
+      );
+
+    body.setAttribute(
+      "d",
+      `M ${-radius} 0 A ${radius} ${radius} 0 0 1 ${radius} 0 L ${-radius} 0 Z`
+    );
+    body.setAttribute(
+      "class",
+      "geometry-protractor-body"
+    );
+    body.dataset.protractorAction =
+      "drag";
+    group.appendChild(body);
+
+    const baseline =
+      document.createElementNS(
+        svgNamespace,
+        "line"
+      );
+
+    baseline.setAttribute(
+      "x1",
+      -radius
+    );
+    baseline.setAttribute(
+      "y1",
+      0
+    );
+    baseline.setAttribute(
+      "x2",
+      radius
+    );
+    baseline.setAttribute(
+      "y2",
+      0
+    );
+    baseline.setAttribute(
+      "class",
+      "geometry-protractor-baseline"
+    );
+    baseline.dataset.protractorAction =
+      "drag";
+    group.appendChild(
+      baseline
+    );
+
+    for (
+      let degrees = 0;
+      degrees <= 180;
+      degrees += 1
+    ) {
+      const radians =
+        degrees *
+        Math.PI /
+        180;
+
+      const tickLength =
+        degrees % 10 === 0
+          ? 13
+          : degrees % 5 === 0
+            ? 9
+            : 5;
+
+      const outerRadius =
+        radius - 2;
+      const innerRadius =
+        outerRadius - tickLength;
+
+      const tick =
+        document.createElementNS(
+          svgNamespace,
+          "line"
+        );
+
+      tick.setAttribute(
+        "x1",
+        outerRadius *
+          Math.cos(radians)
+      );
+      tick.setAttribute(
+        "y1",
+        -outerRadius *
+          Math.sin(radians)
+      );
+      tick.setAttribute(
+        "x2",
+        innerRadius *
+          Math.cos(radians)
+      );
+      tick.setAttribute(
+        "y2",
+        -innerRadius *
+          Math.sin(radians)
+      );
+      tick.setAttribute(
+        "class",
+        degrees % 10 === 0
+          ? "geometry-protractor-tick geometry-protractor-tick-long"
+          : degrees % 5 === 0
+            ? "geometry-protractor-tick geometry-protractor-tick-medium"
+            : "geometry-protractor-tick"
+      );
+      group.appendChild(tick);
+
+      if (
+        degrees % 10 === 0
+      ) {
+        this.appendProtractorLabel({
+          group,
+          svgNamespace,
+          degrees,
+          value: degrees,
+          radius:
+            radius - 25,
+          className:
+            "geometry-protractor-label geometry-protractor-label-outer"
+        });
+
+        this.appendProtractorLabel({
+          group,
+          svgNamespace,
+          degrees,
+          value:
+            180 - degrees,
+          radius:
+            radius - 40,
+          className:
+            "geometry-protractor-label geometry-protractor-label-inner"
+        });
+      }
+    }
+
+    const centerGuide =
+      document.createElementNS(
+        svgNamespace,
+        "path"
+      );
+
+    centerGuide.setAttribute(
+      "d",
+      "M -13 0 A 13 13 0 0 1 13 0"
+    );
+    centerGuide.setAttribute(
+      "class",
+      "geometry-protractor-center-guide"
+    );
+    centerGuide.dataset.protractorAction =
+      "drag";
+    group.appendChild(
+      centerGuide
+    );
+
+    const center =
+      document.createElementNS(
+        svgNamespace,
+        "circle"
+      );
+
+    center.setAttribute("cx", 0);
+    center.setAttribute("cy", 0);
+    center.setAttribute("r", 7);
+    center.setAttribute(
+      "class",
+      "geometry-protractor-center"
+    );
+    center.dataset.protractorAction =
+      "drag";
+    group.appendChild(center);
+
+    const rotationStem =
+      document.createElementNS(
+        svgNamespace,
+        "line"
+      );
+
+    rotationStem.setAttribute(
+      "x1",
+      0
+    );
+    rotationStem.setAttribute(
+      "y1",
+      -radius
+    );
+    rotationStem.setAttribute(
+      "x2",
+      0
+    );
+    rotationStem.setAttribute(
+      "y2",
+      -radius - 24
+    );
+    rotationStem.setAttribute(
+      "class",
+      "geometry-protractor-rotation-stem"
+    );
+    group.appendChild(
+      rotationStem
+    );
+
+    const rotationHandle =
+      document.createElementNS(
+        svgNamespace,
+        "circle"
+      );
+
+    rotationHandle.setAttribute(
+      "cx",
+      0
+    );
+    rotationHandle.setAttribute(
+      "cy",
+      -radius - 24
+    );
+    rotationHandle.setAttribute(
+      "r",
+      10
+    );
+    rotationHandle.setAttribute(
+      "class",
+      "geometry-protractor-rotation-handle"
+    );
+    rotationHandle.dataset.protractorAction =
+      "rotate";
+    group.appendChild(
+      rotationHandle
+    );
+
+    svg.appendChild(group);
+    this.element.appendChild(svg);
+
+    this.protractorElement = svg;
+
+    this.boundProtractorPointerDown =
+      (event) => {
+        const actionElement =
+          event.target.closest(
+            "[data-protractor-action]"
+          );
+
+        if (!actionElement) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const position =
+          this.getRelativePosition(
+            event
+          );
+
+        this.protractorInteraction = {
+          mode:
+            actionElement.dataset
+              .protractorAction,
+          pointerId:
+            event.pointerId,
+          pointerX: position.x,
+          pointerY: position.y,
+          startX:
+            this.protractorState.x,
+          startY:
+            this.protractorState.y
+        };
+
+        actionElement.setPointerCapture(
+          event.pointerId
+        );
+      };
+
+    this.boundProtractorPointerMove =
+      (event) => {
+        const interaction =
+          this.protractorInteraction;
+
+        if (
+          !interaction ||
+          interaction.pointerId !==
+            event.pointerId
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        const position =
+          this.getRelativePosition(
+            event
+          );
+
+        if (
+          interaction.mode ===
+          "drag"
+        ) {
+          const bounds =
+            this.getCanvasBounds();
+
+          this.protractorState.update({
+            x: this.clamp(
+              interaction.startX +
+                position.x -
+                interaction.pointerX,
+              12,
+              Math.max(
+                12,
+                bounds.width - 12
+              )
+            ),
+            y: this.clamp(
+              interaction.startY +
+                position.y -
+                interaction.pointerY,
+              12,
+              Math.max(
+                12,
+                bounds.height - 12
+              )
+            )
+          });
+        } else {
+          const pointerAngle =
+            Math.atan2(
+              position.y -
+                this.protractorState.y,
+              position.x -
+                this.protractorState.x
+            ) *
+            180 /
+            Math.PI;
+
+          this.protractorState.update({
+            rotation:
+              pointerAngle + 90
+          });
+        }
+
+        this.updateProtractor();
+        this.emitProtractorChange();
+      };
+
+    this.boundProtractorPointerUp =
+      (event) => {
+        if (
+          !this.protractorInteraction ||
+          this.protractorInteraction
+            .pointerId !==
+            event.pointerId
+        ) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+        this.protractorInteraction =
+          null;
+        this.emitProtractorChange();
+      };
+
+    group.addEventListener(
+      "pointerdown",
+      this.boundProtractorPointerDown
+    );
+    this.element.addEventListener(
+      "pointermove",
+      this.boundProtractorPointerMove
+    );
+    this.element.addEventListener(
+      "pointerup",
+      this.boundProtractorPointerUp
+    );
+    this.element.addEventListener(
+      "pointercancel",
+      this.boundProtractorPointerUp
+    );
+
+    this.updateProtractor();
+
+    return this.protractorState;
+  }
+
+  appendProtractorLabel({
+    group,
+    svgNamespace,
+    degrees,
+    value,
+    radius,
+    className
+  }) {
+    const radians =
+      degrees * Math.PI / 180;
+    const label =
+      document.createElementNS(
+        svgNamespace,
+        "text"
+      );
+
+    label.setAttribute(
+      "x",
+      radius * Math.cos(radians)
+    );
+    label.setAttribute(
+      "y",
+      -radius * Math.sin(radians)
+    );
+    label.setAttribute(
+      "class",
+      className
+    );
+    label.setAttribute(
+      "text-anchor",
+      "middle"
+    );
+    label.setAttribute(
+      "dominant-baseline",
+      "middle"
+    );
+    label.textContent = value;
+    group.appendChild(label);
+  }
+
+  updateProtractor(changes = null) {
+    if (
+      !this.protractorElement ||
+      !this.protractorState
+    ) {
+      return null;
+    }
+
+    if (changes) {
+      this.protractorState.update(
+        changes
+      );
+    }
+
+    const group =
+      this.protractorElement
+        .querySelector(
+          ".geometry-protractor-content"
+        );
+
+    if (group) {
+      group.setAttribute(
+        "transform",
+        `translate(${this.protractorState.x} ${this.protractorState.y}) rotate(${this.protractorState.rotation})`
+      );
+    }
+
+    this.protractorElement.hidden =
+      !this.protractorState.visible;
+
+    return this.protractorState;
+  }
+
+  emitProtractorChange() {
+    if (
+      typeof this.protractorChangeHandler ===
+      "function"
+    ) {
+      this.protractorChangeHandler(
+        this.protractorState.toJSON()
+      );
+    }
+  }
+
+  getCanvasBounds() {
+    return {
+      width:
+        this.element
+          ? this.element.clientWidth
+          : this.width,
+      height:
+        this.element
+          ? this.element.clientHeight
+          : this.height
+    };
+  }
+
+  clamp(value, minimum, maximum) {
+    return Math.min(
+      maximum,
+      Math.max(
+        minimum,
+        value
+      )
+    );
+  }
+
+  removeProtractor() {
+    if (
+      this.protractorElement
+    ) {
+      const group =
+        this.protractorElement
+          .querySelector(
+            ".geometry-protractor-content"
+          );
+
+      if (
+        group &&
+        this.boundProtractorPointerDown
+      ) {
+        group.removeEventListener(
+          "pointerdown",
+          this.boundProtractorPointerDown
+        );
+      }
+
+      this.protractorElement.remove();
+    }
+
+    if (
+      this.element &&
+      this.boundProtractorPointerMove
+    ) {
+      this.element.removeEventListener(
+        "pointermove",
+        this.boundProtractorPointerMove
+      );
+      this.element.removeEventListener(
+        "pointerup",
+        this.boundProtractorPointerUp
+      );
+      this.element.removeEventListener(
+        "pointercancel",
+        this.boundProtractorPointerUp
+      );
+    }
+
+    this.protractorElement = null;
+    this.protractorState = null;
+    this.protractorChangeHandler = null;
+    this.protractorInteraction = null;
+    this.boundProtractorPointerDown =
+      null;
+    this.boundProtractorPointerMove =
+      null;
+    this.boundProtractorPointerUp =
+      null;
+  }
+
   getRayBoundaryPoint({
     startX,
     startY,
@@ -1134,6 +1745,7 @@ class GeometryCanvas {
 
     this.removeRayPreview();
     this.removeAngleMarker();
+    this.removeProtractor();
 
     if (this.element) {
       this.element.innerHTML = "";

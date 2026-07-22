@@ -182,6 +182,149 @@ class GeometryEngine {
     );
   }
 
+  checkProtractorAlignment({
+    protractor,
+    vertexPointId = null,
+    baselineRayId = null,
+    centerTolerance = 16,
+    rotationTolerance = 4
+  } = {}) {
+    if (!protractor) {
+      return {
+        status:
+          "center-not-aligned",
+        centerAligned: false,
+        baselineAligned: false,
+        centerDistance: null,
+        rotationDifference: null
+      };
+    }
+
+    const resolvedVertexId =
+      vertexPointId ||
+      protractor.targetVertexId;
+    const resolvedRayId =
+      baselineRayId ||
+      protractor.baselineRayId;
+
+    const vertex =
+      this.getPoint(
+        resolvedVertexId
+      );
+    const ray =
+      this.getRay(
+        resolvedRayId
+      );
+    const rayVector =
+      this.getRayVector(
+        resolvedRayId
+      );
+
+    if (
+      !vertex ||
+      !ray ||
+      !rayVector ||
+      ray.originPointId !==
+        vertex.id
+    ) {
+      return {
+        status:
+          "center-not-aligned",
+        centerAligned: false,
+        baselineAligned: false,
+        centerDistance: null,
+        rotationDifference: null
+      };
+    }
+
+    const protractorX =
+      Number(protractor.x);
+    const protractorY =
+      Number(protractor.y);
+    const protractorRotation =
+      Number(protractor.rotation);
+
+    if (
+      !Number.isFinite(
+        protractorX
+      ) ||
+      !Number.isFinite(
+        protractorY
+      ) ||
+      !Number.isFinite(
+        protractorRotation
+      )
+    ) {
+      return {
+        status:
+          "center-not-aligned",
+        centerAligned: false,
+        baselineAligned: false,
+        centerDistance: null,
+        rotationDifference: null
+      };
+    }
+
+    const centerDistance =
+      Math.hypot(
+        protractorX - vertex.x,
+        protractorY - vertex.y
+      );
+    const centerAligned =
+      centerDistance <=
+      centerTolerance;
+
+    const rayDegrees =
+      Math.atan2(
+        rayVector.y,
+        rayVector.x
+      ) *
+      180 /
+      Math.PI;
+    const rotationDifference =
+      this.getUndirectedAngleDifference(
+        protractorRotation,
+        rayDegrees
+      );
+    const baselineAligned =
+      rotationDifference <=
+      rotationTolerance;
+
+    return {
+      status:
+        !centerAligned
+          ? "center-not-aligned"
+          : !baselineAligned
+            ? "baseline-not-aligned"
+            : "ready-to-read",
+      centerAligned,
+      baselineAligned,
+      centerDistance,
+      rotationDifference
+    };
+  }
+
+  getUndirectedAngleDifference(
+    firstDegrees,
+    secondDegrees
+  ) {
+    const first =
+      ((firstDegrees % 180) +
+        180) %
+      180;
+    const second =
+      ((secondDegrees % 180) +
+        180) %
+      180;
+    const difference =
+      Math.abs(first - second);
+
+    return Math.min(
+      difference,
+      180 - difference
+    );
+  }
+
   createAngleDescription({
     id,
     firstRayId,

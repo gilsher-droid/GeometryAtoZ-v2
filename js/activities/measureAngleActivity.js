@@ -10,18 +10,19 @@ class MeasureAngleActivity
     );
 
     this.activityId = "";
-
     this.workspace = null;
     this.geometryEngine = null;
     this.canvas = null;
+    this.protractor = null;
 
     this.inputElement = null;
     this.feedbackElement = null;
-    this.measurementElement = null;
-    this.measureButton = null;
+    this.submitButton = null;
 
     this.actualDegrees = null;
-    this.measurementActivated = false;
+    this.hasSavedProtractor = false;
+    this.boundInputHandler = null;
+    this.boundSubmitHandler = null;
   }
 
   render() {
@@ -34,11 +35,9 @@ class MeasureAngleActivity
       getStepKey(
         this.step
       );
-
     this.workspace =
       lessonState
         .getGeometryWorkspace();
-
     this.geometryEngine =
       new GeometryEngine({
         workspace:
@@ -49,51 +48,93 @@ class MeasureAngleActivity
       lessonState.getActivityState(
         this.activityId
       );
-
     const savedValue =
       activityState.data
         .measuredDegrees ?? "";
-
-    this.measurementActivated =
-      Boolean(
-        activityState.data
-          .measurementActivated
-      );
-
-    const angle =
-      this.getAngle();
+    const angle = this.getAngle();
 
     if (angle) {
       this.actualDegrees =
-        Math.round(
-          angle.degrees * 10
-        ) / 10;
+        angle.degrees;
     }
+
+    const vertexPointId =
+      this.getVertexPointId();
+    const vertex =
+      vertexPointId
+        ? this.workspace.getObject(
+            vertexPointId
+          )
+        : null;
+    const width =
+      this.step.canvasWidth || 640;
+    const height =
+      this.step.canvasHeight || 360;
+    const savedProtractor =
+      activityState.data
+        .protractor || {};
+
+    this.hasSavedProtractor =
+      Boolean(
+        activityState.data
+          .protractor
+      );
+
+    this.protractor =
+      new Protractor({
+        id:
+          savedProtractor.id ||
+          `${this.activityId}-protractor`,
+        x:
+          savedProtractor.x ??
+          this.clamp(
+            (vertex
+              ? vertex.x
+              : width / 2) + 90,
+            20,
+            width - 20
+          ),
+        y:
+          savedProtractor.y ??
+          this.clamp(
+            (vertex
+              ? vertex.y
+              : height / 2) + 70,
+            20,
+            height - 20
+          ),
+        rotation:
+          savedProtractor.rotation ?? 0,
+        radius:
+          savedProtractor.radius ??
+          this.step.protractorRadius ??
+          130,
+        visible:
+          savedProtractor.visible ?? true,
+        targetVertexId:
+          vertexPointId,
+        baselineRayId:
+          this.step.firstRayId ||
+          "ray-1"
+      });
 
     this.canvas =
       new GeometryCanvas({
         id:
           `geometry-canvas-${this.activityId}`,
-
-        width:
-          this.step.canvasWidth ||
-          640,
-
-        height:
-          this.step.canvasHeight ||
-          360,
-
+        width,
+        height,
         className:
           "measure-angle-canvas"
       });
 
     const instruction =
       this.step.instruction ||
-      "הפעל את מד הזווית, התבונן במדידה וכתוב את גודל הזווית.";
+      "מקם את מרכז מד הזווית על הקודקוד, יישר את קו ה־0° עם הקרן הראשונה וקרא את המידה.";
 
     return `
       <div
-        class="construction-activity"
+        class="construction-activity measure-angle-activity"
         data-activity-type="measure-angle"
       >
         <p class="interaction-instruction">
@@ -112,33 +153,7 @@ class MeasureAngleActivity
 
         ${this.canvas.render()}
 
-        <div class="response-box">
-
-          <button
-            id="measure-angle-button-${this.activityId}"
-            type="button"
-            ${angle ? "" : "disabled"}
-          >
-            ${
-              this.measurementActivated
-                ? "מד הזווית הופעל"
-                : "הפעל מד זווית"
-            }
-          </button>
-
-          <p
-            id="angle-measurement-${this.activityId}"
-            class="interaction-feedback"
-            aria-live="polite"
-          >
-            ${
-              this.measurementActivated &&
-              this.actualDegrees !== null
-                ? `מד הזווית מציג: ${this.actualDegrees}°`
-                : "המדידה עדיין מוסתרת."
-            }
-          </p>
-
+        <div class="measure-angle-response">
           <label
             for="angle-answer-${this.activityId}"
           >
@@ -147,24 +162,39 @@ class MeasureAngleActivity
             </strong>
           </label>
 
-          <input
-            id="angle-answer-${this.activityId}"
-            type="number"
-            min="0"
-            max="180"
-            step="0.1"
-            inputmode="decimal"
-            value="${savedValue}"
-            placeholder="לדוגמה: 65"
-          />
+          <div class="measure-angle-controls">
+            <input
+              id="angle-answer-${this.activityId}"
+              type="number"
+              min="0"
+              max="180"
+              step="0.1"
+              inputmode="decimal"
+              value="${this.escapeAttribute(savedValue)}"
+              placeholder="לדוגמה: 65"
+              ${angle ? "" : "disabled"}
+            />
+
+            <button
+              id="measure-submit-${this.activityId}"
+              type="button"
+              ${angle ? "" : "disabled"}
+            >
+              בדוק תשובה
+            </button>
+          </div>
 
           <p
             id="measure-feedback-${this.activityId}"
-            class="response-status"
+            class="measure-angle-feedback"
             aria-live="polite"
           >
+            ${
+              angle
+                ? this.getAlignmentFeedback()
+                : ""
+            }
           </p>
-
         </div>
       </div>
     `;
@@ -179,59 +209,90 @@ class MeasureAngleActivity
     }
 
     this.canvas.attach();
-
     this.canvas.loadObjects(
       this.workspace
         .getAllObjects()
     );
-
     this.drawAngleMarker();
+
+    if (
+      this.actualDegrees !== null
+    ) {
+      this.positionInitialProtractor();
+
+      this.canvas.drawProtractor(
+        this.protractor,
+        {
+          onChange:
+            (protractorData) => {
+              this.protractor.update(
+                protractorData
+              );
+              this.appContext
+                .lessonState
+                .markIncomplete(
+                  this.activityId
+                );
+              this.save();
+              this.showFeedback(
+                this.getAlignmentFeedback()
+              );
+            }
+        }
+      );
+    }
 
     this.inputElement =
       document.getElementById(
         `angle-answer-${this.activityId}`
       );
-
     this.feedbackElement =
       document.getElementById(
         `measure-feedback-${this.activityId}`
       );
-
-    this.measurementElement =
+    this.submitButton =
       document.getElementById(
-        `angle-measurement-${this.activityId}`
+        `measure-submit-${this.activityId}`
       );
 
-    this.measureButton =
-      document.getElementById(
-        `measure-angle-button-${this.activityId}`
-      );
-
-    if (this.measureButton) {
-      this.measureButton
-        .addEventListener(
-          "click",
-          () => {
-            this.activateMeasurement();
-          }
+    this.boundInputHandler =
+      () => {
+        this.appContext.lessonState
+          .markIncomplete(
+            this.activityId
+          );
+        this.save();
+        this.showFeedback(
+          this.getAlignmentFeedback()
         );
-    }
+      };
+    this.boundSubmitHandler =
+      () => {
+        const isValid =
+          this.validate();
+
+        if (!isValid) {
+          this.focus();
+        }
+      };
 
     if (this.inputElement) {
-      this.inputElement
-        .addEventListener(
-          "input",
-          () => {
-            this.save();
-          }
-        );
+      this.inputElement.addEventListener(
+        "input",
+        this.boundInputHandler
+      );
+    }
+
+    if (this.submitButton) {
+      this.submitButton.addEventListener(
+        "click",
+        this.boundSubmitHandler
+      );
     }
   }
 
   getAngle() {
-    if (
-      !this.geometryEngine
-    ) {
+    if (!this.geometryEngine) {
       return null;
     }
 
@@ -240,19 +301,129 @@ class MeasureAngleActivity
         id:
           this.step.angleId ||
           "angle-1",
-
         firstRayId:
           this.step.firstRayId ||
           "ray-1",
-
         secondRayId:
           this.step.secondRayId ||
           "ray-2",
-
         label:
           this.step.angleLabel ||
           ""
       });
+  }
+
+  positionInitialProtractor() {
+    if (
+      this.hasSavedProtractor ||
+      !this.protractor ||
+      !this.canvas ||
+      !this.canvas.element
+    ) {
+      return;
+    }
+
+    const width =
+      this.canvas.element.clientWidth;
+    const height =
+      this.canvas.element.clientHeight;
+    const radius =
+      this.protractor.radius;
+    const horizontalMargin =
+      radius + 12;
+    const minimumY =
+      radius + 36;
+
+    this.protractor.update({
+      x:
+        width >=
+        horizontalMargin * 2
+          ? this.clamp(
+              this.protractor.x,
+              horizontalMargin,
+              width -
+                horizontalMargin
+            )
+          : width / 2,
+      y:
+        height >= minimumY + 12
+          ? this.clamp(
+              this.protractor.y,
+              minimumY,
+              height - 12
+            )
+          : height / 2
+    });
+  }
+
+  getVertexPointId() {
+    if (this.step.vertexPointId) {
+      return this.step.vertexPointId;
+    }
+
+    const firstRay =
+      this.workspace
+        ? this.workspace.getObject(
+            this.step.firstRayId ||
+            "ray-1"
+          )
+        : null;
+
+    return firstRay
+      ? firstRay.originPointId
+      : "point-A";
+  }
+
+  getAlignmentStatus() {
+    if (
+      !this.geometryEngine ||
+      !this.protractor
+    ) {
+      return {
+        status:
+          "center-not-aligned",
+        centerAligned: false,
+        baselineAligned: false
+      };
+    }
+
+    return this.geometryEngine
+      .checkProtractorAlignment({
+        protractor:
+          this.protractor,
+        vertexPointId:
+          this.getVertexPointId(),
+        baselineRayId:
+          this.step.firstRayId ||
+          "ray-1",
+        centerTolerance:
+          this.step.centerTolerance ??
+          16,
+        rotationTolerance:
+          this.step.rotationTolerance ??
+          4
+      });
+  }
+
+  getAlignmentFeedback() {
+    const alignment =
+      this.getAlignmentStatus();
+
+    if (
+      alignment.status ===
+      "center-not-aligned"
+    ) {
+      return "מקם את מרכז מד הזווית על קודקוד הזווית.";
+    }
+
+    if (
+      alignment.status ===
+      "baseline-not-aligned"
+    ) {
+      return "סובב את מד הזווית כך שקו ה־0° יהיה מונח על הקרן הראשונה.";
+    }
+
+    return "מד הזווית מוכן לקריאה. בדוק היכן הקרן השנייה פוגשת את הסקלה.";
   }
 
   drawAngleMarker() {
@@ -266,7 +437,6 @@ class MeasureAngleActivity
     const firstRayId =
       this.step.firstRayId ||
       "ray-1";
-
     const secondRayId =
       this.step.secondRayId ||
       "ray-2";
@@ -285,67 +455,33 @@ class MeasureAngleActivity
     this.canvas.drawAngleMarker({
       firstRayId,
       secondRayId,
-
       radius:
         this.step.angleMarkerRadius ||
         48,
-
-      /*
-        בשלב המדידה המספר אינו מוצג
-        על הקשת עצמה. הוא יופיע רק
-        לאחר הפעלת מד הזווית.
-      */
       showDegrees: false
     });
-  }
-
-  activateMeasurement() {
-    if (
-      this.actualDegrees === null
-    ) {
-      return;
-    }
-
-    this.measurementActivated =
-      true;
-
-    if (
-      this.measurementElement
-    ) {
-      this.measurementElement
-        .textContent =
-          `מד הזווית מציג: ${this.actualDegrees}°`;
-    }
-
-    if (
-      this.measureButton
-    ) {
-      this.measureButton
-        .textContent =
-          "מד הזווית הופעל";
-
-      this.measureButton.disabled =
-        true;
-    }
-
-    this.save();
   }
 
   save() {
     const measuredDegrees =
       this.inputElement
         ? this.inputElement.value
-        : "";
+        : this.appContext
+            .lessonState
+            .getActivityState(
+              this.activityId
+            ).data
+            .measuredDegrees ?? "";
 
     this.appContext.lessonState
       .updateActivityData(
         this.activityId,
         {
           measuredDegrees,
-          measurementActivated:
-            this.measurementActivated,
-          actualDegrees:
-            this.actualDegrees
+          protractor:
+            this.protractor
+              ? this.protractor.toJSON()
+              : null
         }
       );
   }
@@ -355,9 +491,47 @@ class MeasureAngleActivity
 
     if (
       this.actualDegrees === null ||
-      !this.measurementActivated ||
       !this.inputElement
     ) {
+      return false;
+    }
+
+    const alignment =
+      this.getAlignmentStatus();
+
+    if (!alignment.centerAligned) {
+      this.showFeedback(
+        "מקם את מרכז מד הזווית על קודקוד הזווית."
+      );
+      this.appContext.lessonState
+        .markIncomplete(
+          this.activityId
+        );
+      return false;
+    }
+
+    if (!alignment.baselineAligned) {
+      this.showFeedback(
+        "סובב את מד הזווית כך שקו ה־0° יהיה מונח על הקרן הראשונה."
+      );
+      this.appContext.lessonState
+        .markIncomplete(
+          this.activityId
+        );
+      return false;
+    }
+
+    if (
+      this.inputElement.value.trim() ===
+      ""
+    ) {
+      this.showFeedback(
+        "כתוב את גודל הזווית במעלות."
+      );
+      this.appContext.lessonState
+        .markIncomplete(
+          this.activityId
+        );
       return false;
     }
 
@@ -365,56 +539,33 @@ class MeasureAngleActivity
       Number(
         this.inputElement.value
       );
-
-    if (
-      !Number.isFinite(
-        studentValue
-      )
-    ) {
-      if (
-        this.feedbackElement
-      ) {
-        this.feedbackElement
-          .textContent =
-            "כתוב את גודל הזווית במעלות.";
-      }
-
-      return false;
-    }
-
     const tolerance =
-      this.step.tolerance ??
-      1;
-
-    const difference =
+      this.step.tolerance ?? 1;
+    const isValid =
+      Number.isFinite(
+        studentValue
+      ) &&
+      studentValue >= 0 &&
+      studentValue <= 180 &&
       Math.abs(
         studentValue -
-        this.actualDegrees
-      );
-
-    const isValid =
-      difference <= tolerance;
+          this.actualDegrees
+      ) <= tolerance;
 
     if (!isValid) {
-      if (
-        this.feedbackElement
-      ) {
-        this.feedbackElement
-          .textContent =
-            "המדידה אינה מתאימה. בדוק שוב את מד הזווית.";
-      }
-
+      this.showFeedback(
+        "בדוק מאיזו סקלה צריך להתחיל לקרוא."
+      );
+      this.appContext.lessonState
+        .markIncomplete(
+          this.activityId
+        );
       return false;
     }
 
-    if (
-      this.feedbackElement
-    ) {
-      this.feedbackElement
-        .textContent =
-          "המדידה נכונה.";
-    }
-
+    this.showFeedback(
+      "המדידה נכונה."
+    );
     this.appContext.lessonState
       .markCompleted(
         this.activityId
@@ -423,15 +574,71 @@ class MeasureAngleActivity
     return true;
   }
 
+  showFeedback(message) {
+    if (this.feedbackElement) {
+      this.feedbackElement.textContent =
+        message;
+    }
+  }
+
   focus() {
+    const alignment =
+      this.getAlignmentStatus();
+
     if (
-      this.inputElement
+      (!alignment.centerAligned ||
+        !alignment.baselineAligned) &&
+      this.canvas &&
+      this.canvas.element
     ) {
+      this.canvas.element.focus();
+      return;
+    }
+
+    if (this.inputElement) {
       this.inputElement.focus();
     }
   }
 
+  clamp(value, minimum, maximum) {
+    return Math.min(
+      maximum,
+      Math.max(
+        minimum,
+        value
+      )
+    );
+  }
+
+  escapeAttribute(value) {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;");
+  }
+
   destroy() {
+    if (
+      this.inputElement &&
+      this.boundInputHandler
+    ) {
+      this.inputElement.removeEventListener(
+        "input",
+        this.boundInputHandler
+      );
+    }
+
+    if (
+      this.submitButton &&
+      this.boundSubmitHandler
+    ) {
+      this.submitButton.removeEventListener(
+        "click",
+        this.boundSubmitHandler
+      );
+    }
+
     if (this.canvas) {
       this.canvas.destroy();
     }
@@ -439,11 +646,13 @@ class MeasureAngleActivity
     this.canvas = null;
     this.workspace = null;
     this.geometryEngine = null;
-
+    this.protractor = null;
+    this.hasSavedProtractor = false;
     this.inputElement = null;
     this.feedbackElement = null;
-    this.measurementElement = null;
-    this.measureButton = null;
+    this.submitButton = null;
+    this.boundInputHandler = null;
+    this.boundSubmitHandler = null;
   }
 }
 

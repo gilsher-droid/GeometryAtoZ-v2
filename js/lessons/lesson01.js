@@ -90,13 +90,17 @@ const lesson01 = {
   type: "measure-angle",
   title: "מודדים זווית",
   text:
-    "עכשיו נמדוד את הזווית שיצרת.",
+    "השתמש במד הזווית כדי למדוד את הזווית שיצרת.",
   instruction:
-    "הפעל את מד הזווית, קרא את המדידה וכתוב את גודל הזווית במעלות.",
+    "מקם את מרכז מד הזווית על הקודקוד, יישר את קו ה־0° עם הקרן הראשונה וקרא את המידה.",
+  vertexPointId: "point-A",
   firstRayId: "ray-1",
   secondRayId: "ray-2",
   angleId: "angle-1",
   tolerance: 1,
+  centerTolerance: 16,
+  rotationTolerance: 4,
+  protractorRadius: 130,
   canvasWidth: 640,
   canvasHeight: 360
 },
