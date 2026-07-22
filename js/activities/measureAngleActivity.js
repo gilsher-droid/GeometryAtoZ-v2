@@ -115,8 +115,16 @@ class MeasureAngleActivity
           vertexPointId,
         baselineRayId:
           this.step.firstRayId ||
-          "ray-1"
+          "ray-1",
+        centerLocked:
+          savedProtractor
+            .centerLocked ?? false,
+        baselineLocked:
+          savedProtractor
+            .baselineLocked ?? false
       });
+
+    this.restoreProtractorLocks();
 
     this.canvas =
       new GeometryCanvas({
@@ -224,7 +232,10 @@ class MeasureAngleActivity
         this.protractor,
         {
           onChange:
-            (protractorData) => {
+            (
+              protractorData,
+              interactionEvent
+            ) => {
               this.protractor.update(
                 protractorData
               );
@@ -235,9 +246,13 @@ class MeasureAngleActivity
                 );
               this.save();
               this.showFeedback(
-                this.getAlignmentFeedback()
+                this.getProtractorChangeFeedback(
+                  interactionEvent
+                )
               );
-            }
+            },
+          snapping:
+            this.getProtractorSnappingOptions()
         }
       );
     }
@@ -374,6 +389,116 @@ class MeasureAngleActivity
       : "point-A";
   }
 
+  getProtractorSnappingOptions() {
+    if (!this.geometryEngine) {
+      return null;
+    }
+
+    const vertex =
+      this.geometryEngine.getPoint(
+        this.getVertexPointId()
+      );
+    const baselineRayId =
+      this.step.firstRayId ||
+      "ray-1";
+
+    if (!vertex) {
+      return null;
+    }
+
+    return {
+      centerTarget: {
+        x: vertex.x,
+        y: vertex.y
+      },
+      getCenterDistance:
+        (position) =>
+          this.geometryEngine
+            .calculateDistance(
+              position,
+              vertex
+            ),
+      getBaselineTarget:
+        (rotation) =>
+          this.geometryEngine
+            .getClosestBaselineRotation({
+              rotation,
+              rayId: baselineRayId
+            }),
+      centerSnapTolerance:
+        this.step
+          .centerSnapTolerance ?? 24,
+      centerUnlockTolerance:
+        this.step
+          .centerUnlockTolerance ?? 32,
+      baselineSnapTolerance:
+        this.step
+          .baselineSnapTolerance ?? 6,
+      baselineUnsnapTolerance:
+        this.step
+          .baselineUnsnapTolerance ?? 10
+    };
+  }
+
+  restoreProtractorLocks() {
+    if (
+      !this.protractor ||
+      !this.geometryEngine
+    ) {
+      return;
+    }
+
+    const vertex =
+      this.geometryEngine.getPoint(
+        this.getVertexPointId()
+      );
+
+    if (
+      !vertex ||
+      !this.protractor.centerLocked
+    ) {
+      this.protractor.update({
+        centerLocked: false,
+        baselineLocked: false
+      });
+      return;
+    }
+
+    this.protractor.setPosition(
+      vertex.x,
+      vertex.y
+    );
+
+    if (
+      !this.protractor.baselineLocked
+    ) {
+      return;
+    }
+
+    const baselineTarget =
+      this.geometryEngine
+        .getClosestBaselineRotation({
+          rotation:
+            this.protractor.rotation,
+          rayId:
+            this.step.firstRayId ||
+            "ray-1"
+        });
+
+    if (!baselineTarget) {
+      this.protractor.update({
+        baselineLocked: false
+      });
+      return;
+    }
+
+    this.protractor.update({
+      rotation:
+        baselineTarget.rotation,
+      baselineLocked: true
+    });
+  }
+
   getAlignmentStatus() {
     if (
       !this.geometryEngine ||
@@ -406,6 +531,13 @@ class MeasureAngleActivity
   }
 
   getAlignmentFeedback() {
+    if (
+      this.protractor &&
+      this.protractor.baselineLocked
+    ) {
+      return "קו ה־0° ננעל לקרן הראשונה. כעת קרא את הזווית.";
+    }
+
     const alignment =
       this.getAlignmentStatus();
 
@@ -424,6 +556,31 @@ class MeasureAngleActivity
     }
 
     return "מד הזווית מוכן לקריאה. בדוק היכן הקרן השנייה פוגשת את הסקלה.";
+  }
+
+  getProtractorChangeFeedback(
+    interactionEvent
+  ) {
+    const changeType =
+      interactionEvent
+        ? interactionEvent.type
+        : null;
+
+    if (
+      changeType ===
+      "center-snapped"
+    ) {
+      return "מרכז מד הזווית ננעל לקודקוד.";
+    }
+
+    if (
+      changeType ===
+      "baseline-snapped"
+    ) {
+      return "קו ה־0° ננעל לקרן הראשונה. כעת קרא את הזווית.";
+    }
+
+    return this.getAlignmentFeedback();
   }
 
   drawAngleMarker() {

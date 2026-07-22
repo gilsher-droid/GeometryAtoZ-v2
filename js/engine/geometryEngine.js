@@ -182,6 +182,117 @@ class GeometryEngine {
     );
   }
 
+  calculateDistance(
+    firstPoint,
+    secondPoint
+  ) {
+    if (
+      !firstPoint ||
+      !secondPoint
+    ) {
+      return null;
+    }
+
+    const firstX =
+      Number(firstPoint.x);
+    const firstY =
+      Number(firstPoint.y);
+    const secondX =
+      Number(secondPoint.x);
+    const secondY =
+      Number(secondPoint.y);
+
+    if (
+      !Number.isFinite(firstX) ||
+      !Number.isFinite(firstY) ||
+      !Number.isFinite(secondX) ||
+      !Number.isFinite(secondY)
+    ) {
+      return null;
+    }
+
+    return Math.hypot(
+      firstX - secondX,
+      firstY - secondY
+    );
+  }
+
+  normalizeDegrees(degrees) {
+    return (
+      (degrees % 360) + 360
+    ) % 360;
+  }
+
+  getAngleDifference(
+    firstDegrees,
+    secondDegrees
+  ) {
+    const difference =
+      this.normalizeDegrees(
+        firstDegrees -
+          secondDegrees +
+          180
+      ) - 180;
+
+    return Math.abs(
+      difference
+    );
+  }
+
+  getClosestBaselineRotation({
+    rotation,
+    rayId
+  } = {}) {
+    const rayVector =
+      this.getRayVector(rayId);
+    const numericRotation =
+      Number(rotation);
+
+    if (
+      !rayVector ||
+      !Number.isFinite(
+        numericRotation
+      )
+    ) {
+      return null;
+    }
+
+    const rayRotation =
+      this.normalizeDegrees(
+        Math.atan2(
+          rayVector.y,
+          rayVector.x
+        ) *
+        180 /
+        Math.PI
+      );
+    const candidates = [
+      rayRotation,
+      this.normalizeDegrees(
+        rayRotation + 180
+      )
+    ];
+
+    return candidates
+      .map(
+        (candidateRotation) => ({
+          rotation:
+            candidateRotation,
+          difference:
+            this.getAngleDifference(
+              numericRotation,
+              candidateRotation
+            ),
+          rayRotation
+        })
+      )
+      .sort(
+        (first, second) =>
+          first.difference -
+          second.difference
+      )[0];
+  }
+
   checkProtractorAlignment({
     protractor,
     vertexPointId = null,

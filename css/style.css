@@ -409,6 +409,41 @@ button:disabled {
   cursor: grab;
 }
 
+.geometry-protractor-content.is-center-locked
+  .geometry-protractor-center {
+  fill: #dcfce7;
+  stroke: var(--success);
+  filter: drop-shadow(0 0 5px rgba(21, 128, 61, 0.45));
+  animation: protractor-center-lock 0.45s ease-out;
+}
+
+.geometry-protractor-content.is-center-locked
+  .geometry-protractor-center-guide {
+  stroke: var(--success);
+  stroke-width: 3;
+}
+
+.geometry-protractor-content.is-baseline-locked
+  .geometry-protractor-baseline {
+  stroke: var(--success);
+  stroke-width: 4;
+  filter: drop-shadow(0 0 3px rgba(21, 128, 61, 0.35));
+}
+
+@keyframes protractor-center-lock {
+  0% {
+    stroke-width: 3;
+  }
+
+  45% {
+    stroke-width: 6;
+  }
+
+  100% {
+    stroke-width: 3;
+  }
+}
+
 .geometry-protractor-rotation-stem {
   stroke: #c2410c;
   stroke-width: 2;

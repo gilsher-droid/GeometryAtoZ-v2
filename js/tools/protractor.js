@@ -7,7 +7,9 @@ class Protractor extends GeometryTool {
     radius = 130,
     visible = true,
     targetVertexId = null,
-    baselineRayId = null
+    baselineRayId = null,
+    centerLocked = false,
+    baselineLocked = false
   } = {}) {
     if (!id) {
       throw new Error(
@@ -40,6 +42,11 @@ class Protractor extends GeometryTool {
       targetVertexId || null;
     this.baselineRayId =
       baselineRayId || null;
+    this.centerLocked =
+      centerLocked === true;
+    this.baselineLocked =
+      baselineLocked === true &&
+      this.centerLocked;
   }
 
   update(changes = {}) {
@@ -95,6 +102,31 @@ class Protractor extends GeometryTool {
         changes.baselineRayId || null;
     }
 
+    if (
+      Object.prototype.hasOwnProperty.call(
+        changes,
+        "centerLocked"
+      )
+    ) {
+      this.centerLocked =
+        changes.centerLocked === true;
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        changes,
+        "baselineLocked"
+      )
+    ) {
+      this.baselineLocked =
+        changes.baselineLocked === true &&
+        this.centerLocked;
+    }
+
+    if (!this.centerLocked) {
+      this.baselineLocked = false;
+    }
+
     return this;
   }
 
@@ -115,7 +147,11 @@ class Protractor extends GeometryTool {
       targetVertexId:
         this.targetVertexId,
       baselineRayId:
-        this.baselineRayId
+        this.baselineRayId,
+      centerLocked:
+        this.centerLocked,
+      baselineLocked:
+        this.baselineLocked
     };
   }
 }
