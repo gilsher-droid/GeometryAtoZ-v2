@@ -3,16 +3,20 @@ const lesson01 = {
 
   title: "הכניסה לעולם הגיאומטריה",
 
-  subtitle: "מנקודה לזווית — ואיך בונים טענה וצידוק",
+  subtitle:
+    "מנקודה לזווית — ואיך בונים טענה וצידוק",
 
-  thinkingKey: "גיאומטריה מתחילה מהגדרות.",
+  thinkingKey:
+    "גיאומטריה מתחילה מהגדרות.",
 
   steps: [
     {
       id: "welcome",
       type: "welcome",
-      title: "ברוכים הבאים לעולם הגיאומטריה",
-      text: "המסע שלנו מתחיל בשאלה פשוטה: ממה בנויה הגיאומטריה?",
+      title:
+        "ברוכים הבאים לעולם הגיאומטריה",
+      text:
+        "המסע שלנו מתחיל בשאלה פשוטה: ממה בנויה הגיאומטריה?",
       actionLabel: "מתחילים"
     },
 
@@ -20,23 +24,31 @@ const lesson01 = {
       id: "shapes-question",
       type: "question",
       title: "מה משותף לכל הצורות?",
-      text: "התבונן בריבוע, במלבן, במשולש, בטרפז ובמשושה. מה לדעתך משותף לכולן?",
-      prompt: "כתוב או אמור את ההשערה שלך."
+      text:
+        "התבונן בריבוע, במלבן, במשולש, בטרפז ובמשושה. מה לדעתך משותף לכולן?",
+      prompt:
+        "כתוב או אמור את ההשערה שלך."
     },
 
     {
       id: "point",
-      type: "interactive",
+      type: "construction",
       title: "נקודה",
-      text: "לחץ במקום כלשהו כדי ליצור נקודה.",
-      interaction: "createPoint"
+      text:
+        "לחץ במקום כלשהו כדי ליצור נקודה.",
+      instruction:
+        "לחץ בתוך המשטח כדי ליצור נקודה.",
+      pointLabel: "A",
+      canvasWidth: 640,
+      canvasHeight: 360
     },
 
     {
       id: "ray",
       type: "interactive",
       title: "קרן",
-      text: "גרור מהנקודה לכיוון כלשהו כדי ליצור קרן.",
+      text:
+        "גרור מהנקודה לכיוון כלשהו כדי ליצור קרן.",
       interaction: "createRay"
     },
 
@@ -44,7 +56,8 @@ const lesson01 = {
       id: "angle",
       type: "interactive",
       title: "נוצרת זווית",
-      text: "צור קרן נוספת מאותה נקודה. מה נוצר בין שתי הקרניים?",
+      text:
+        "צור קרן נוספת מאותה נקודה. מה נוצר בין שתי הקרניים?",
       interaction: "createAngle"
     },
 
@@ -52,15 +65,18 @@ const lesson01 = {
       id: "identify-parts",
       type: "question",
       title: "מהם חלקי הזווית?",
-      text: "סמן את הקודקוד, את שתי הקרניים ואת הזווית.",
-      prompt: "איך אתה יודע שכל רכיב הוא מה שסימנת?"
+      text:
+        "סמן את הקודקוד, את שתי הקרניים ואת הזווית.",
+      prompt:
+        "איך אתה יודע שכל רכיב הוא מה שסימנת?"
     },
 
     {
       id: "measure-angle",
       type: "interactive",
       title: "מודדים זווית",
-      text: "השתמש במד הזווית כדי למדוד את הזווית שיצרת.",
+      text:
+        "השתמש במד הזווית כדי למדוד את הזווית שיצרת.",
       interaction: "measureAngle"
     },
 
@@ -68,17 +84,22 @@ const lesson01 = {
       id: "classify-angle",
       type: "claim-justification",
       title: "איזה סוג זווית זו?",
-      text: "בחר את סוג הזווית ובנה טענה מתאימה.",
-      claimPrompt: "הטענה שלי היא:",
-      justificationPrompt: "הצידוק שלי הוא:"
+      text:
+        "בחר את סוג הזווית ובנה טענה מתאימה.",
+      claimPrompt:
+        "הטענה שלי היא:",
+      justificationPrompt:
+        "הצידוק שלי הוא:"
     },
 
     {
       id: "thinking-key",
       type: "thinking-key",
       title: "מפתח החשיבה הראשון",
-      text: "גיאומטריה מתחילה מהגדרות.",
-      reflection: "למה חשוב להגדיר מושגים לפני שמתחילים להוכיח טענות?"
+      text:
+        "גיאומטריה מתחילה מהגדרות.",
+      reflection:
+        "למה חשוב להגדיר מושגים לפני שמתחילים להוכיח טענות?"
     },
 
     {
