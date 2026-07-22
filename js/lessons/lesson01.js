@@ -100,6 +100,10 @@ const lesson01 = {
   tolerance: 1,
   centerTolerance: 16,
   rotationTolerance: 4,
+  centerSnapTolerance: 24,
+  centerUnlockTolerance: 32,
+  baselineSnapTolerance: 6,
+  baselineUnsnapTolerance: 10,
   protractorRadius: 130,
   canvasWidth: 640,
   canvasHeight: 360

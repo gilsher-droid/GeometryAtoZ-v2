@@ -39,6 +39,7 @@ class GeometryCanvas {
     this.protractorElement = null;
     this.protractorState = null;
     this.protractorChangeHandler = null;
+    this.protractorSnapOptions = null;
     this.protractorInteraction = null;
     this.boundProtractorPointerDown = null;
     this.boundProtractorPointerMove = null;
@@ -967,7 +968,8 @@ class GeometryCanvas {
   drawProtractor(
     protractor,
     {
-      onChange = null
+      onChange = null,
+      snapping = null
     } = {}
   ) {
     this.ensureAttached();
@@ -985,6 +987,10 @@ class GeometryCanvas {
       "function"
         ? onChange
         : null;
+    this.protractorSnapOptions =
+      this.normalizeProtractorSnapping(
+        snapping
+      );
 
     const svgNamespace =
       "http://www.w3.org/2000/svg";
@@ -1288,7 +1294,11 @@ class GeometryCanvas {
           startX:
             this.protractorState.x,
           startY:
-            this.protractorState.y
+            this.protractorState.y,
+          lockAnchor:
+            this.protractorState
+              .centerLocked === true,
+          lastChangeType: null
         };
 
         actionElement.setPointerCapture(
@@ -1323,29 +1333,110 @@ class GeometryCanvas {
         ) {
           const bounds =
             this.getCanvasBounds();
+          const deltaX =
+            position.x -
+            interaction.pointerX;
+          const deltaY =
+            position.y -
+            interaction.pointerY;
+          const displacement =
+            Math.hypot(
+              deltaX,
+              deltaY
+            );
+          const previousCenterLocked =
+            this.protractorState
+              .centerLocked === true;
+          let changeType = null;
 
-          this.protractorState.update({
-            x: this.clamp(
-              interaction.startX +
-                position.x -
-                interaction.pointerX,
-              12,
-              Math.max(
+          if (
+            interaction.lockAnchor &&
+            displacement <
+              this.getCenterUnlockTolerance()
+          ) {
+            this.attachProtractorToCenterTarget();
+          } else {
+            if (
+              interaction.lockAnchor
+            ) {
+              interaction.lockAnchor =
+                false;
+            }
+
+            const candidate = {
+              x: this.clamp(
+                interaction.startX +
+                  deltaX,
                 12,
-                bounds.width - 12
-              )
-            ),
-            y: this.clamp(
-              interaction.startY +
-                position.y -
-                interaction.pointerY,
-              12,
-              Math.max(
+                Math.max(
+                  12,
+                  bounds.width - 12
+                )
+              ),
+              y: this.clamp(
+                interaction.startY +
+                  deltaY,
                 12,
-                bounds.height - 12
+                Math.max(
+                  12,
+                  bounds.height - 12
+                )
               )
-            )
-          });
+            };
+            const centerDistance =
+              this.getProtractorCenterDistance(
+                candidate
+              );
+            const shouldSnapCenter =
+              centerDistance !== null &&
+              centerDistance <=
+                this.getCenterSnapTolerance();
+
+            if (shouldSnapCenter) {
+              this.attachProtractorToCenterTarget();
+              interaction.lockAnchor =
+                true;
+              interaction.pointerX =
+                position.x;
+              interaction.pointerY =
+                position.y;
+              interaction.startX =
+                this.protractorState.x;
+              interaction.startY =
+                this.protractorState.y;
+            } else {
+              this.protractorState.update({
+                ...candidate,
+                centerLocked: false,
+                baselineLocked: false
+              });
+            }
+          }
+
+          if (
+            !previousCenterLocked &&
+            this.protractorState
+              .centerLocked
+          ) {
+            changeType =
+              "center-snapped";
+          } else if (
+            previousCenterLocked &&
+            !this.protractorState
+              .centerLocked
+          ) {
+            changeType =
+              "center-unlocked";
+          }
+
+          this.updateProtractor();
+          if (changeType) {
+            interaction.lastChangeType =
+              changeType;
+          }
+          this.emitProtractorChange(
+            changeType
+          );
         } else {
           const pointerAngle =
             Math.atan2(
@@ -1357,14 +1448,68 @@ class GeometryCanvas {
             180 /
             Math.PI;
 
-          this.protractorState.update({
-            rotation:
-              pointerAngle + 90
-          });
-        }
+          const rawRotation =
+            pointerAngle + 90;
+          const previousBaselineLocked =
+            this.protractorState
+              .baselineLocked === true;
+          const baselineTarget =
+            this.getProtractorBaselineTarget(
+              rawRotation
+            );
+          let nextRotation =
+            rawRotation;
+          let baselineLocked = false;
+          let changeType = null;
 
-        this.updateProtractor();
-        this.emitProtractorChange();
+          if (
+            this.protractorState
+              .centerLocked &&
+            baselineTarget
+          ) {
+            const tolerance =
+              previousBaselineLocked
+                ? this.getBaselineUnsnapTolerance()
+                : this.getBaselineSnapTolerance();
+
+            if (
+              baselineTarget.difference <=
+              tolerance
+            ) {
+              nextRotation =
+                baselineTarget.rotation;
+              baselineLocked = true;
+            }
+          }
+
+          this.protractorState.update({
+            rotation: nextRotation,
+            baselineLocked
+          });
+
+          if (
+            !previousBaselineLocked &&
+            baselineLocked
+          ) {
+            changeType =
+              "baseline-snapped";
+          } else if (
+            previousBaselineLocked &&
+            !baselineLocked
+          ) {
+            changeType =
+              "baseline-unlocked";
+          }
+
+          this.updateProtractor();
+          if (changeType) {
+            interaction.lastChangeType =
+              changeType;
+          }
+          this.emitProtractorChange(
+            changeType
+          );
+        }
       };
 
     this.boundProtractorPointerUp =
@@ -1380,9 +1525,15 @@ class GeometryCanvas {
 
         event.preventDefault();
         event.stopPropagation();
+        const finalChangeType =
+          this.protractorInteraction
+            .lastChangeType ||
+          "interaction-end";
         this.protractorInteraction =
           null;
-        this.emitProtractorChange();
+        this.emitProtractorChange(
+          finalChangeType
+        );
       };
 
     group.addEventListener(
@@ -1405,6 +1556,200 @@ class GeometryCanvas {
     this.updateProtractor();
 
     return this.protractorState;
+  }
+
+  normalizeProtractorSnapping(
+    snapping
+  ) {
+    if (
+      !snapping ||
+      !snapping.centerTarget
+    ) {
+      return null;
+    }
+
+    const centerX =
+      Number(
+        snapping.centerTarget.x
+      );
+    const centerY =
+      Number(
+        snapping.centerTarget.y
+      );
+
+    if (
+      !Number.isFinite(centerX) ||
+      !Number.isFinite(centerY)
+    ) {
+      return null;
+    }
+
+    return {
+      centerTarget: {
+        x: centerX,
+        y: centerY
+      },
+      getCenterDistance:
+        typeof snapping
+          .getCenterDistance ===
+        "function"
+          ? snapping.getCenterDistance
+          : null,
+      getBaselineTarget:
+        typeof snapping
+          .getBaselineTarget ===
+        "function"
+          ? snapping.getBaselineTarget
+          : null,
+      centerSnapTolerance:
+        this.toNonNegativeNumber(
+          snapping.centerSnapTolerance,
+          24
+        ),
+      centerUnlockTolerance:
+        this.toNonNegativeNumber(
+          snapping.centerUnlockTolerance,
+          32
+        ),
+      baselineSnapTolerance:
+        this.toNonNegativeNumber(
+          snapping.baselineSnapTolerance,
+          6
+        ),
+      baselineUnsnapTolerance:
+        this.toNonNegativeNumber(
+          snapping.baselineUnsnapTolerance,
+          10
+        )
+    };
+  }
+
+  toNonNegativeNumber(
+    value,
+    fallback
+  ) {
+    const numberValue =
+      Number(value);
+
+    return Number.isFinite(
+      numberValue
+    )
+      ? Math.max(0, numberValue)
+      : fallback;
+  }
+
+  getCenterSnapTolerance() {
+    return this.protractorSnapOptions
+      ? this.protractorSnapOptions
+          .centerSnapTolerance
+      : 0;
+  }
+
+  getCenterUnlockTolerance() {
+    return this.protractorSnapOptions
+      ? this.protractorSnapOptions
+          .centerUnlockTolerance
+      : 0;
+  }
+
+  getBaselineSnapTolerance() {
+    return this.protractorSnapOptions
+      ? this.protractorSnapOptions
+          .baselineSnapTolerance
+      : 0;
+  }
+
+  getBaselineUnsnapTolerance() {
+    return this.protractorSnapOptions
+      ? this.protractorSnapOptions
+          .baselineUnsnapTolerance
+      : 0;
+  }
+
+  getProtractorCenterDistance(
+    position
+  ) {
+    if (!this.protractorSnapOptions) {
+      return null;
+    }
+
+    if (
+      this.protractorSnapOptions
+        .getCenterDistance
+    ) {
+      const distance =
+        this.protractorSnapOptions
+          .getCenterDistance(position);
+
+      return Number.isFinite(distance)
+        ? distance
+        : null;
+    }
+
+    return Math.hypot(
+      position.x -
+        this.protractorSnapOptions
+          .centerTarget.x,
+      position.y -
+        this.protractorSnapOptions
+          .centerTarget.y
+    );
+  }
+
+  getProtractorBaselineTarget(
+    rotation
+  ) {
+    if (
+      !this.protractorSnapOptions ||
+      !this.protractorSnapOptions
+        .getBaselineTarget
+    ) {
+      return null;
+    }
+
+    const target =
+      this.protractorSnapOptions
+        .getBaselineTarget(rotation);
+
+    if (
+      !target ||
+      !Number.isFinite(
+        Number(target.rotation)
+      ) ||
+      !Number.isFinite(
+        Number(target.difference)
+      )
+    ) {
+      return null;
+    }
+
+    return {
+      rotation:
+        Number(target.rotation),
+      difference:
+        Math.abs(
+          Number(target.difference)
+        )
+    };
+  }
+
+  attachProtractorToCenterTarget() {
+    if (
+      !this.protractorState ||
+      !this.protractorSnapOptions
+    ) {
+      return;
+    }
+
+    this.protractorState.update({
+      x:
+        this.protractorSnapOptions
+          .centerTarget.x,
+      y:
+        this.protractorSnapOptions
+          .centerTarget.y,
+      centerLocked: true
+    });
   }
 
   appendProtractorLabel({
@@ -1472,6 +1817,17 @@ class GeometryCanvas {
         "transform",
         `translate(${this.protractorState.x} ${this.protractorState.y}) rotate(${this.protractorState.rotation})`
       );
+
+      group.classList.toggle(
+        "is-center-locked",
+        this.protractorState
+          .centerLocked === true
+      );
+      group.classList.toggle(
+        "is-baseline-locked",
+        this.protractorState
+          .baselineLocked === true
+      );
     }
 
     this.protractorElement.hidden =
@@ -1480,13 +1836,18 @@ class GeometryCanvas {
     return this.protractorState;
   }
 
-  emitProtractorChange() {
+  emitProtractorChange(
+    changeType = null
+  ) {
     if (
       typeof this.protractorChangeHandler ===
       "function"
     ) {
       this.protractorChangeHandler(
-        this.protractorState.toJSON()
+        this.protractorState.toJSON(),
+        {
+          type: changeType
+        }
       );
     }
   }
@@ -1558,6 +1919,7 @@ class GeometryCanvas {
     this.protractorElement = null;
     this.protractorState = null;
     this.protractorChangeHandler = null;
+    this.protractorSnapOptions = null;
     this.protractorInteraction = null;
     this.boundProtractorPointerDown =
       null;
