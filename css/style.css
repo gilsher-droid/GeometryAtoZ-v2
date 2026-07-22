@@ -303,3 +303,16 @@ button:disabled {
 .angle-construction-canvas {
   cursor: crosshair;
 }
+.geometry-angle-arc {
+  fill: none;
+  stroke: #f59e0b;
+  stroke-width: 4;
+  stroke-linecap: round;
+}
+
+.geometry-angle-label {
+  fill: #92400e;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: "Heebo", Arial, sans-serif;
+}
