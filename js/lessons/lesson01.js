@@ -97,7 +97,7 @@ const lesson01 = {
   firstRayId: "ray-1",
   secondRayId: "ray-2",
   angleId: "angle-1",
-  tolerance: 1,
+  answerToleranceDegrees: 1,
   centerTolerance: 16,
   rotationTolerance: 4,
   centerSnapTolerance: 24,

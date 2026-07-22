@@ -51,6 +51,10 @@ class MeasureAngleActivity
     const savedValue =
       activityState.data
         .measuredDegrees ?? "";
+    const displayedSavedValue =
+      this.normalizeMeasurementInput(
+        savedValue
+      );
     const angle = this.getAngle();
 
     if (angle) {
@@ -166,22 +170,28 @@ class MeasureAngleActivity
             for="angle-answer-${this.activityId}"
           >
             <strong>
-              מהו גודל הזווית במעלות?
+              כתוב את גודל הזווית במעלות שלמות.
             </strong>
           </label>
 
           <div class="measure-angle-controls">
-            <input
-              id="angle-answer-${this.activityId}"
-              type="number"
-              min="0"
-              max="180"
-              step="0.1"
-              inputmode="decimal"
-              value="${this.escapeAttribute(savedValue)}"
-              placeholder="לדוגמה: 65"
-              ${angle ? "" : "disabled"}
-            />
+            <span class="measure-angle-input">
+              <input
+                id="angle-answer-${this.activityId}"
+                type="number"
+                min="0"
+                max="180"
+                step="1"
+                inputmode="numeric"
+                value="${this.escapeAttribute(displayedSavedValue)}"
+                placeholder="לדוגמה: 65"
+                ${angle ? "" : "disabled"}
+              />
+              <span
+                class="measure-angle-degree-symbol"
+                aria-hidden="true"
+              >°</span>
+            </span>
 
             <button
               id="measure-submit-${this.activityId}"
@@ -669,21 +679,7 @@ class MeasureAngleActivity
 
     if (!alignment.baselineAligned) {
       this.showFeedback(
-        "סובב את מד הזווית כך שקו ה־0° יהיה מונח על הקרן הראשונה."
-      );
-      this.appContext.lessonState
-        .markIncomplete(
-          this.activityId
-        );
-      return false;
-    }
-
-    if (
-      this.inputElement.value.trim() ===
-      ""
-    ) {
-      this.showFeedback(
-        "כתוב את גודל הזווית במעלות."
+        "יישר את קו ה־0° עם הקרן הראשונה."
       );
       this.appContext.lessonState
         .markIncomplete(
@@ -693,25 +689,36 @@ class MeasureAngleActivity
     }
 
     const studentValue =
-      Number(
+      this.parseMeasurementAnswer(
         this.inputElement.value
       );
+
+    if (studentValue === null) {
+      this.showFeedback(
+        "כתוב את גודל הזווית במעלות שלמות."
+      );
+      this.appContext.lessonState
+        .markIncomplete(
+          this.activityId
+        );
+      return false;
+    }
+
     const tolerance =
-      this.step.tolerance ?? 1;
+      this.step
+        .answerToleranceDegrees ??
+      this.step.tolerance ??
+      1;
     const isValid =
-      Number.isFinite(
-        studentValue
-      ) &&
-      studentValue >= 0 &&
-      studentValue <= 180 &&
-      Math.abs(
-        studentValue -
-          this.actualDegrees
-      ) <= tolerance;
+      this.isWholeDegreeMeasurementCorrect(
+        studentValue,
+        this.actualDegrees,
+        tolerance
+      );
 
     if (!isValid) {
       this.showFeedback(
-        "בדוק מאיזו סקלה צריך להתחיל לקרוא."
+        "בדוק מאיזו סקלה צריך להתחיל לקרוא ועגל למעלה השלמה הקרובה ביותר."
       );
       this.appContext.lessonState
         .markIncomplete(
@@ -729,6 +736,106 @@ class MeasureAngleActivity
       );
 
     return true;
+  }
+
+  normalizeMeasurementInput(value) {
+    return String(value ?? "")
+      .trim()
+      .replace(",", ".");
+  }
+
+  parseMeasurementAnswer(value) {
+    const normalizedValue =
+      this.normalizeMeasurementInput(
+        value
+      );
+
+    if (
+      normalizedValue === "" ||
+      !/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)$/.test(
+        normalizedValue
+      )
+    ) {
+      return null;
+    }
+
+    const numericValue =
+      Number(normalizedValue);
+
+    return Number.isFinite(
+      numericValue
+    )
+      ? numericValue
+      : null;
+  }
+
+  getSmallerAngleDegrees(
+    actualAngle
+  ) {
+    const numericAngle =
+      Number(actualAngle);
+
+    if (
+      !Number.isFinite(
+        numericAngle
+      )
+    ) {
+      return null;
+    }
+
+    const normalizedAngle =
+      ((numericAngle % 360) +
+        360) %
+      360;
+
+    return normalizedAngle > 180
+      ? 360 - normalizedAngle
+      : normalizedAngle;
+  }
+
+  isWholeDegreeMeasurementCorrect(
+    enteredAnswer,
+    actualAngle,
+    tolerance = 1
+  ) {
+    const numericAnswer =
+      Number(enteredAnswer);
+    const smallerAngle =
+      this.getSmallerAngleDegrees(
+        actualAngle
+      );
+    const numericTolerance =
+      Number(tolerance);
+
+    if (
+      !Number.isFinite(
+        numericAnswer
+      ) ||
+      numericAnswer < 0 ||
+      numericAnswer > 180 ||
+      smallerAngle === null
+    ) {
+      return false;
+    }
+
+    const expectedAnswer =
+      Math.round(smallerAngle);
+    const enteredWholeDegrees =
+      Math.round(numericAnswer);
+    const allowedDifference =
+      Number.isFinite(
+        numericTolerance
+      )
+        ? Math.max(
+            0,
+            numericTolerance
+          )
+        : 1;
+
+    return Math.abs(
+      enteredWholeDegrees -
+        expectedAnswer
+    ) <= allowedDifference;
   }
 
   showFeedback(message) {

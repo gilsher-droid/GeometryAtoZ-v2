@@ -474,10 +474,16 @@ button:disabled {
   margin-top: 10px;
 }
 
-.measure-angle-controls input {
+.measure-angle-input {
+  position: relative;
+  display: inline-flex;
+  width: min(220px, 100%);
+}
+
+.measure-angle-input input {
   width: min(220px, 100%);
   min-width: 0;
-  padding: 12px 14px;
+  padding: 12px 34px 12px 14px;
   border: 1px solid #b8c7d6;
   border-radius: 12px;
   background: white;
@@ -486,7 +492,18 @@ button:disabled {
   text-align: center;
 }
 
-.measure-angle-controls input:focus {
+.measure-angle-degree-symbol {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  color: var(--text);
+  font-weight: 700;
+  line-height: 1;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.measure-angle-input input:focus {
   outline: 3px solid rgba(47, 128, 201, 0.18);
   border-color: var(--primary-light);
 }
@@ -503,7 +520,8 @@ button:disabled {
     flex-direction: column;
   }
 
-  .measure-angle-controls input {
+  .measure-angle-input,
+  .measure-angle-input input {
     width: 100%;
   }
 }
