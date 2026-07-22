@@ -163,6 +163,12 @@ class AngleConstructionActivity
         .getAllObjects()
     );
 
+    /*
+      אם כבר קיימות שתי קרניים,
+      מציגים מיד את סימון הזווית.
+    */
+    this.drawAngleMarker();
+
     const originPointId =
       this.step.originPointId ||
       "point-A";
@@ -273,6 +279,12 @@ class AngleConstructionActivity
         .getAllObjects()
     );
 
+    /*
+      לאחר יצירת הקרן השנייה,
+      מציגים מחדש את הקשת ואת המידה.
+    */
+    this.drawAngleMarker();
+
     this.canvas.enableRayCreation({
       originPointId
     });
@@ -306,6 +318,47 @@ class AngleConstructionActivity
           angle
         );
     }
+  }
+
+  drawAngleMarker() {
+    if (
+      !this.canvas ||
+      !this.workspace
+    ) {
+      return;
+    }
+
+    const firstRayId =
+      this.step.firstRayId ||
+      "ray-1";
+
+    const secondRayId =
+      this.step.secondRayId ||
+      "ray-2";
+
+    if (
+      !this.workspace.hasObject(
+        firstRayId
+      ) ||
+      !this.workspace.hasObject(
+        secondRayId
+      )
+    ) {
+      return;
+    }
+
+    this.canvas.drawAngleMarker({
+      firstRayId,
+      secondRayId,
+
+      radius:
+        this.step.angleMarkerRadius ||
+        48,
+
+      showDegrees:
+        this.step.showAngleDegrees !==
+        false
+    });
   }
 
   normalizeAngleDifference(
