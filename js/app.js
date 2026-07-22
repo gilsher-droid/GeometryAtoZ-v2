@@ -95,6 +95,11 @@ document.addEventListener(
         AngleConstructionActivity
       );
 
+      renderer.register(
+  "measure-angle",
+  MeasureAngleActivity
+);
+
       return renderer;
     }
 
