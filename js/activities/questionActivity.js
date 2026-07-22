@@ -1,6 +1,13 @@
-class QuestionActivity extends BaseActivity {
-  constructor(step, appContext = {}) {
-    super(step, appContext);
+class QuestionActivity
+  extends BaseActivity {
+  constructor(
+    step,
+    appContext = {}
+  ) {
+    super(
+      step,
+      appContext
+    );
 
     this.responseBox = null;
     this.activityId = "";
@@ -13,7 +20,9 @@ class QuestionActivity extends BaseActivity {
     } = this.appContext;
 
     this.activityId =
-      getStepKey(this.step);
+      getStepKey(
+        this.step
+      );
 
     const activityState =
       lessonState.getActivityState(
@@ -35,23 +44,38 @@ class QuestionActivity extends BaseActivity {
       new ResponseBox({
         id:
           `response-${this.activityId}-question`,
-        label: question,
+
+        label:
+          question,
+
         placeholder:
           this.step.answerPlaceholder ||
           this.step.placeholder ||
           "כתוב כאן את התשובה שלך...",
-        value: savedValue,
-        buttonText: "שמור תשובה",
 
-        onSave: (value) => {
-          lessonState.updateActivityData(
-            this.activityId,
-            {
-              value,
-              savedValue: value
-            }
-          );
-        }
+        value:
+          savedValue,
+
+        /*
+          כפתור השמירה מוסתר.
+          השמירה מתבצעת אוטומטית
+          בזמן ההקלדה ובמעבר לשלב הבא.
+        */
+        showSaveButton: false,
+
+        onChange:
+          (value) => {
+            this.saveValue(
+              value
+            );
+          },
+
+        onSave:
+          (value) => {
+            this.saveValue(
+              value
+            );
+          }
       });
 
     return `
@@ -74,6 +98,66 @@ class QuestionActivity extends BaseActivity {
     }
 
     this.responseBox.attach();
+
+    const textarea =
+      document.getElementById(
+        this.responseBox.id
+      );
+
+    if (!textarea) {
+      return;
+    }
+
+    /*
+      גיבוי ל-Auto Save במקרה
+      ש-ResponseBox עדיין לא תומך
+      באירוע onChange.
+    */
+    textarea.addEventListener(
+      "input",
+      () => {
+        this.saveValue(
+          textarea.value
+        );
+      }
+    );
+  }
+
+  save() {
+    if (!this.responseBox) {
+      return;
+    }
+
+    this.saveValue(
+      this.responseBox.value
+    );
+  }
+
+  saveValue(value) {
+    const normalizedValue =
+      typeof value === "string"
+        ? value
+        : "";
+
+    this.appContext.lessonState
+      .updateActivityData(
+        this.activityId,
+        {
+          value:
+            normalizedValue,
+
+          savedValue:
+            normalizedValue
+        }
+      );
+
+    if (this.responseBox) {
+      this.responseBox.value =
+        normalizedValue;
+
+      this.responseBox.savedValue =
+        normalizedValue;
+    }
   }
 
   validate() {
@@ -81,16 +165,18 @@ class QuestionActivity extends BaseActivity {
       return true;
     }
 
+    /*
+      מבצעים שמירה נוספת לפני הבדיקה,
+      כדי שגם הקלדה מיד לפני לחיצה
+      על "הבא" תישמר.
+    */
+    this.save();
+
     const currentValue =
       this.responseBox.value.trim();
 
-    const savedValue =
-      this.responseBox.savedValue.trim();
-
     const isValid =
-      currentValue !== "" &&
-      savedValue !== "" &&
-      currentValue === savedValue;
+      currentValue !== "";
 
     if (isValid) {
       this.appContext.lessonState
