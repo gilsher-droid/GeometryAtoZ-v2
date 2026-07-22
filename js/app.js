@@ -244,29 +244,36 @@ document.addEventListener("DOMContentLoaded", () => {
       const answerFeedback =
         document.getElementById("answer-feedback");
 
-      saveAnswerButton.addEventListener("click", () => {
-        const answer = answerInput.value.trim();
+saveAnswerButton.addEventListener("click", () => {
+  const answer = answerInput.value.trim();
 
-        if (!answer) {
-          answerFeedback.textContent =
-            "כתוב תשובה לפני השמירה.";
+  if (!answer) {
+    answerFeedback.textContent =
+      "כתוב תשובה לפני השמירה.";
 
-          answerInput.focus();
-          return;
-        }
+    answerInput.focus();
+    return;
+  }
 
-        studentAnswers[stepKey] = answer;
-        answerFeedback.textContent = "התשובה נשמרה.";
-      });
+  studentAnswers[stepKey] = answer;
 
-      answerInput.addEventListener("input", () => {
-        if (
-          studentAnswers[stepKey] !== answerInput.value.trim()
-        ) {
-          answerFeedback.textContent =
-            "יש שינויים שעדיין לא נשמרו.";
-        }
-      });
+  answerFeedback.textContent = "התשובה נשמרה.";
+
+  saveAnswerButton.disabled = true;
+  saveAnswerButton.textContent = "✓ התשובה נשמרה";
+});
+
+ answerInput.addEventListener("input", () => {
+  if (
+    studentAnswers[stepKey] !== answerInput.value.trim()
+  ) {
+    answerFeedback.textContent =
+      "יש שינויים שעדיין לא נשמרו.";
+
+    saveAnswerButton.disabled = false;
+    saveAnswerButton.textContent = "שמור תשובה";
+  }
+});
     }
 
     const previousButton =
