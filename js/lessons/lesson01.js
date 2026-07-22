@@ -58,14 +58,22 @@ const lesson01 = {
   canvasHeight: 360
 },
 
-    {
-      id: "angle",
-      type: "interactive",
-      title: "נוצרת זווית",
-      text:
-        "צור קרן נוספת מאותה נקודה. מה נוצר בין שתי הקרניים?",
-      interaction: "createAngle"
-    },
+{
+  id: "angle",
+  type: "angle-construction",
+  title: "נוצרת זווית",
+  text:
+    "שתי קרניים היוצאות מאותה נקודה יוצרות זווית.",
+  instruction:
+    "גרור מהנקודה A בכיוון חדש כדי ליצור קרן שנייה.",
+  originPointId: "point-A",
+  firstRayId: "ray-1",
+  secondRayId: "ray-2",
+  angleId: "angle-1",
+  angleLabel: "",
+  canvasWidth: 640,
+  canvasHeight: 360
+},
 
     {
       id: "identify-parts",
