@@ -85,14 +85,21 @@ const lesson01 = {
     "כתוב מהו הקודקוד, מהן שתי הקרניים וכיצד הן יוצרות זווית."
 },
 
-    {
-      id: "measure-angle",
-      type: "interactive",
-      title: "מודדים זווית",
-      text:
-        "השתמש במד הזווית כדי למדוד את הזווית שיצרת.",
-      interaction: "measureAngle"
-    },
+{
+  id: "measure-angle",
+  type: "measure-angle",
+  title: "מודדים זווית",
+  text:
+    "עכשיו נמדוד את הזווית שיצרת.",
+  instruction:
+    "הפעל את מד הזווית, קרא את המדידה וכתוב את גודל הזווית במעלות.",
+  firstRayId: "ray-1",
+  secondRayId: "ray-2",
+  angleId: "angle-1",
+  tolerance: 1,
+  canvasWidth: 640,
+  canvasHeight: 360
+},
 
     {
       id: "classify-angle",
