@@ -1,4 +1,4 @@
-class Protractor {
+class Protractor extends GeometryTool {
   constructor({
     id = "protractor-1",
     x = 0,
@@ -15,9 +15,13 @@ class Protractor {
       );
     }
 
-    this.id = id;
-    this.x = this.toFiniteNumber(x, 0);
-    this.y = this.toFiniteNumber(y, 0);
+    super({
+      id,
+      x,
+      y,
+      visible
+    });
+
     this.rotation =
       this.normalizeRotation(
         this.toFiniteNumber(
@@ -32,8 +36,6 @@ class Protractor {
         130
       )
     );
-    this.visible =
-      visible !== false;
     this.targetVertexId =
       targetVertexId || null;
     this.baselineRayId =
@@ -41,29 +43,7 @@ class Protractor {
   }
 
   update(changes = {}) {
-    if (
-      Object.prototype.hasOwnProperty.call(
-        changes,
-        "x"
-      )
-    ) {
-      this.x = this.toFiniteNumber(
-        changes.x,
-        this.x
-      );
-    }
-
-    if (
-      Object.prototype.hasOwnProperty.call(
-        changes,
-        "y"
-      )
-    ) {
-      this.y = this.toFiniteNumber(
-        changes.y,
-        this.y
-      );
-    }
+    super.update(changes);
 
     if (
       Object.prototype.hasOwnProperty.call(
@@ -98,16 +78,6 @@ class Protractor {
     if (
       Object.prototype.hasOwnProperty.call(
         changes,
-        "visible"
-      )
-    ) {
-      this.visible =
-        changes.visible !== false;
-    }
-
-    if (
-      Object.prototype.hasOwnProperty.call(
-        changes,
         "targetVertexId"
       )
     ) {
@@ -132,17 +102,6 @@ class Protractor {
     return (
       (degrees % 360) + 360
     ) % 360;
-  }
-
-  toFiniteNumber(value, fallback) {
-    const numberValue =
-      Number(value);
-
-    return Number.isFinite(
-      numberValue
-    )
-      ? numberValue
-      : fallback;
   }
 
   toJSON() {
