@@ -1,7 +1,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   const lessonContainer = document.getElementById("lesson-container");
 
-  const studentAnswers = {};
+  const savedResponses = {};
+  const savedPointPositions = {};
 
   lessonEngine.loadLesson(lesson01);
 
@@ -9,21 +10,54 @@ document.addEventListener("DOMContentLoaded", () => {
     return step.id || `step-${lessonEngine.currentStepIndex}`;
   }
 
-  function escapeHTML(value = "") {
-    return String(value)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
+  function getResponseKey(stepKey, responseType) {
+    return `${stepKey}-${responseType}`;
   }
 
   function getStepQuestion(step) {
     return step.question || step.prompt || "";
   }
 
-  function stepRequiresAnswer(step) {
-    return Boolean(getStepQuestion(step));
+  function createResponseBox({
+    stepKey,
+    responseType,
+    label,
+    placeholder,
+    buttonText = "שמור תשובה"
+  }) {
+    if (!label) {
+      return null;
+    }
+
+    const responseKey = getResponseKey(stepKey, responseType);
+    const savedValue = savedResponses[responseKey] || "";
+
+    return new ResponseBox({
+      id: `response-${responseKey}`,
+      label,
+      placeholder,
+      value: savedValue,
+      buttonText,
+
+      onSave: (value) => {
+        savedResponses[responseKey] = value;
+      }
+    });
+  }
+
+  function responseBoxIsSaved(responseBox) {
+    if (!responseBox) {
+      return true;
+    }
+
+    const currentValue = responseBox.value.trim();
+    const savedValue = responseBox.savedValue.trim();
+
+    return (
+      currentValue !== "" &&
+      savedValue !== "" &&
+      currentValue === savedValue
+    );
   }
 
   function renderStep() {
@@ -31,7 +65,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!step) {
       lessonContainer.innerHTML = `
-        <section>
+        <section class="lesson-step">
           <h2>לא נמצא שלב להצגה</h2>
         </section>
       `;
@@ -39,16 +73,56 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const progress = lessonEngine.getProgress();
-    const isPointStep = step.interaction === "createPoint";
     const stepKey = getStepKey(step);
+    const isPointStep = step.interaction === "createPoint";
     const question = getStepQuestion(step);
-    const savedAnswer = studentAnswers[stepKey] || "";
-    const hasSavedAnswer = savedAnswer.trim().length > 0;
+
+    const responseBoxes = [];
+
+    const questionBox = createResponseBox({
+      stepKey,
+      responseType: "question",
+      label: question,
+      placeholder:
+        step.answerPlaceholder ||
+        "כתוב כאן את התשובה שלך...",
+      buttonText: "שמור תשובה"
+    });
+
+    const claimBox = createResponseBox({
+      stepKey,
+      responseType: "claim",
+      label: step.claimPrompt,
+      placeholder: "כתוב כאן את הטענה שלך...",
+      buttonText: "שמור טענה"
+    });
+
+    const justificationBox = createResponseBox({
+      stepKey,
+      responseType: "justification",
+      label: step.justificationPrompt,
+      placeholder: "כתוב כאן את הצידוק שלך...",
+      buttonText: "שמור צידוק"
+    });
+
+    if (questionBox) {
+      responseBoxes.push(questionBox);
+    }
+
+    if (claimBox) {
+      responseBoxes.push(claimBox);
+    }
+
+    if (justificationBox) {
+      responseBoxes.push(justificationBox);
+    }
 
     lessonContainer.innerHTML = `
       <section class="lesson-step">
         <div class="progress-wrapper">
-          <div class="progress-label">התקדמות: ${progress}%</div>
+          <div class="progress-label">
+            התקדמות: ${progress}%
+          </div>
 
           <div class="progress-track">
             <div
@@ -76,11 +150,19 @@ document.addEventListener("DOMContentLoaded", () => {
                     לחץ בתוך השטח כדי ליצור נקודה.
                   </p>
 
-                  <div id="point-canvas" class="point-canvas"></div>
+                  <div
+                    id="point-canvas"
+                    class="point-canvas"
+                  ></div>
 
-                  <p id="point-feedback" class="interaction-feedback">
+                  <p
+                    id="point-feedback"
+                    class="interaction-feedback"
+                  >
                     ${
-                      interactionEngine.isCompleted("createPoint")
+                      interactionEngine.isCompleted(
+                        `createPoint-${stepKey}`
+                      )
                         ? "יצרת נקודה. עכשיו אפשר להמשיך."
                         : "עדיין לא נוצרה נקודה."
                     }
@@ -91,77 +173,31 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           ${
-            question
+            questionBox
               ? `
                 <div class="teacher-prompt">
                   <strong>שאלת חשיבה:</strong>
-
-                  <p>${question}</p>
-
-                  <label for="student-answer">
-                    כתוב את תשובתך:
-                  </label>
-
-                  <textarea
-                    id="student-answer"
-                    rows="4"
-                    placeholder="${
-                      step.answerPlaceholder ||
-                      "כתוב כאן את התשובה שלך..."
-                    }"
-                  >${escapeHTML(savedAnswer)}</textarea>
-
-                  <button
-                    id="save-answer-button"
-                    type="button"
-                  >
-                    שמור תשובה
-                  </button>
-
-                  <p
-                    id="answer-feedback"
-                    class="interaction-feedback"
-                  >
-                    ${
-                      hasSavedAnswer
-                        ? "התשובה נשמרה."
-                        : "התשובה עדיין לא נשמרה."
-                    }
-                  </p>
+                  ${questionBox.render()}
                 </div>
               `
               : ""
           }
 
           ${
-            step.claimPrompt
+            claimBox
               ? `
                 <div class="claim-box">
-                  <label for="claim-input">${step.claimPrompt}</label>
-
-                  <textarea
-                    id="claim-input"
-                    rows="3"
-                    placeholder="כתוב כאן את הטענה שלך"
-                  ></textarea>
+                  ${claimBox.render()}
                 </div>
               `
               : ""
           }
 
           ${
-            step.justificationPrompt
+            justificationBox
               ? `
                 <div class="justification-box">
-                  <label for="justification-input">
-                    ${step.justificationPrompt}
-                  </label>
-
-                  <textarea
-                    id="justification-input"
-                    rows="3"
-                    placeholder="כתוב כאן את הצידוק שלך"
-                  ></textarea>
+                  ${justificationBox.render()}
                 </div>
               `
               : ""
@@ -183,7 +219,9 @@ document.addEventListener("DOMContentLoaded", () => {
               ? `
                 <ul class="concept-list">
                   ${step.concepts
-                    .map((concept) => `<li>${concept}</li>`)
+                    .map(
+                      (concept) => `<li>${concept}</li>`
+                    )
                     .join("")}
                 </ul>
               `
@@ -210,70 +248,45 @@ document.addEventListener("DOMContentLoaded", () => {
       </section>
     `;
 
+    responseBoxes.forEach((responseBox) => {
+      responseBox.attach();
+    });
+
     if (isPointStep) {
-      const pointCanvas = document.getElementById("point-canvas");
-      const pointFeedback = document.getElementById("point-feedback");
+      const interactionKey = `createPoint-${stepKey}`;
+      const pointCanvas =
+        document.getElementById("point-canvas");
+
+      const pointFeedback =
+        document.getElementById("point-feedback");
+
+      const savedPosition =
+        savedPointPositions[stepKey];
+
+      if (savedPosition) {
+        drawPoint(
+          pointCanvas,
+          savedPosition.x,
+          savedPosition.y
+        );
+      }
 
       pointCanvas.addEventListener("click", (event) => {
-        pointCanvas.innerHTML = "";
+        const rect =
+          pointCanvas.getBoundingClientRect();
 
-        const rect = pointCanvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
 
-        const point = document.createElement("div");
-        point.className = "created-point";
+        savedPointPositions[stepKey] = { x, y };
 
-        point.style.left = `${event.clientX - rect.left}px`;
-        point.style.top = `${event.clientY - rect.top}px`;
-
-        pointCanvas.appendChild(point);
+        drawPoint(pointCanvas, x, y);
 
         pointFeedback.textContent =
           "יצרת נקודה. עכשיו אפשר להמשיך.";
 
-        interactionEngine.complete("createPoint");
+        interactionEngine.complete(interactionKey);
       });
-    }
-
-    if (question) {
-      const answerInput =
-        document.getElementById("student-answer");
-
-      const saveAnswerButton =
-        document.getElementById("save-answer-button");
-
-      const answerFeedback =
-        document.getElementById("answer-feedback");
-
-saveAnswerButton.addEventListener("click", () => {
-  const answer = answerInput.value.trim();
-
-  if (!answer) {
-    answerFeedback.textContent =
-      "כתוב תשובה לפני השמירה.";
-
-    answerInput.focus();
-    return;
-  }
-
-  studentAnswers[stepKey] = answer;
-
-  answerFeedback.textContent = "התשובה נשמרה.";
-
-  saveAnswerButton.disabled = true;
-  saveAnswerButton.textContent = "✓ התשובה נשמרה";
-});
-
- answerInput.addEventListener("input", () => {
-  if (
-    studentAnswers[stepKey] !== answerInput.value.trim()
-  ) {
-    answerFeedback.textContent =
-      "יש שינויים שעדיין לא נשמרו.";
-
-    saveAnswerButton.disabled = false;
-    saveAnswerButton.textContent = "שמור תשובה";
-  }
-});
     }
 
     const previousButton =
@@ -288,60 +301,104 @@ saveAnswerButton.addEventListener("click", () => {
     });
 
     nextButton.addEventListener("click", () => {
-      if (
-        isPointStep &&
-        !interactionEngine.isCompleted("createPoint")
-      ) {
-        alert(
-          "כדי להמשיך, צור קודם נקודה בתוך שטח הפעילות."
-        );
-        return;
+      if (isPointStep) {
+        const interactionKey =
+          `createPoint-${stepKey}`;
+
+        if (
+          !interactionEngine.isCompleted(interactionKey)
+        ) {
+          alert(
+            "כדי להמשיך, צור קודם נקודה בתוך שטח הפעילות."
+          );
+          return;
+        }
       }
 
-      if (
-        stepRequiresAnswer(step) &&
-        !studentAnswers[stepKey]
-      ) {
-        alert(
-          "כדי להמשיך, כתוב תשובה ולחץ על שמור תשובה."
+      const unsavedResponse =
+        responseBoxes.find(
+          (responseBox) =>
+            !responseBoxIsSaved(responseBox)
         );
+
+      if (unsavedResponse) {
+        alert(
+          "כדי להמשיך, כתוב תשובה ושמור את הגרסה האחרונה שלה."
+        );
+
+        const textarea =
+          document.getElementById(
+            unsavedResponse.id
+          );
+
+        if (textarea) {
+          textarea.focus();
+        }
+
         return;
       }
 
       if (lessonEngine.isLastStep()) {
-        lessonContainer.innerHTML = `
-          <section class="lesson-complete">
-            <h2>סיימת את השיעור הראשון</h2>
-
-            <p>
-              בנית את מפתח החשיבה הראשון:
-              <strong>${lesson01.thinkingKey}</strong>
-            </p>
-
-            <button id="restart-button" type="button">
-              להתחיל מחדש
-            </button>
-          </section>
-        `;
-
-        document
-          .getElementById("restart-button")
-          .addEventListener("click", () => {
-            Object.keys(studentAnswers).forEach((key) => {
-              delete studentAnswers[key];
-            });
-
-            interactionEngine.reset();
-            lessonEngine.loadLesson(lesson01);
-            renderStep();
-          });
-
+        renderCompletionScreen();
         return;
       }
 
       lessonEngine.nextStep();
       renderStep();
     });
+  }
+
+  function drawPoint(pointCanvas, x, y) {
+    pointCanvas.innerHTML = "";
+
+    const point = document.createElement("div");
+
+    point.className = "created-point";
+    point.style.left = `${x}px`;
+    point.style.top = `${y}px`;
+
+    pointCanvas.appendChild(point);
+  }
+
+  function renderCompletionScreen() {
+    lessonContainer.innerHTML = `
+      <section class="lesson-complete">
+        <h2>סיימת את השיעור הראשון</h2>
+
+        <p>
+          בנית את מפתח החשיבה הראשון:
+          <strong>${lesson01.thinkingKey}</strong>
+        </p>
+
+        <button
+          id="restart-button"
+          type="button"
+        >
+          להתחיל מחדש
+        </button>
+      </section>
+    `;
+
+    document
+      .getElementById("restart-button")
+      .addEventListener("click", () => {
+        Object.keys(savedResponses).forEach(
+          (key) => {
+            delete savedResponses[key];
+          }
+        );
+
+        Object.keys(savedPointPositions).forEach(
+          (key) => {
+            delete savedPointPositions[key];
+          }
+        );
+
+        interactionEngine.reset();
+        lessonEngine.loadLesson(lesson01);
+
+        renderStep();
+      });
   }
 
   renderStep();
