@@ -1,74 +1,91 @@
-class ClaimJustificationActivity extends BaseActivity {
+class ClaimJustificationActivity
+  extends BaseActivity {
   constructor(step, appContext = {}) {
     super(step, appContext);
 
+    this.activityId = "";
     this.claimBox = null;
     this.justificationBox = null;
-
-    this.createResponseBoxes();
   }
 
   createResponseBoxes() {
     const {
-      savedResponses,
-      getStepKey,
-      getResponseKey
+      lessonState,
+      getStepKey
     } = this.appContext;
 
-    const stepKey = getStepKey(this.step);
+    this.activityId =
+      getStepKey(this.step);
 
-    const claimKey = getResponseKey(
-      stepKey,
-      "claim"
-    );
+    const activityState =
+      lessonState.getActivityState(
+        this.activityId
+      );
 
-    const justificationKey = getResponseKey(
-      stepKey,
-      "justification"
-    );
+    const claimValue =
+      activityState.data.savedClaim ||
+      activityState.data.claim ||
+      "";
 
-    this.claimBox = new ResponseBox({
-      id: `response-${claimKey}`,
-      label:
-        this.step.claimPrompt ||
-        "מהי הטענה שלך?",
-      placeholder:
-        "כתוב כאן את הטענה שלך...",
-      value:
-        savedResponses[claimKey] || "",
-      buttonText: "שמור טענה",
+    const justificationValue =
+      activityState.data
+        .savedJustification ||
+      activityState.data
+        .justification ||
+      "";
 
-      onSave: (value) => {
-        savedResponses[claimKey] =
-          value;
-      }
-    });
+    this.claimBox =
+      new ResponseBox({
+        id:
+          `response-${this.activityId}-claim`,
+        label:
+          this.step.claimPrompt ||
+          "מהי הטענה שלך?",
+        placeholder:
+          "כתוב כאן את הטענה שלך...",
+        value: claimValue,
+        buttonText: "שמור טענה",
+
+        onSave: (value) => {
+          lessonState.updateActivityData(
+            this.activityId,
+            {
+              claim: value,
+              savedClaim: value
+            }
+          );
+        }
+      });
 
     this.justificationBox =
       new ResponseBox({
         id:
-          `response-${justificationKey}`,
+          `response-${this.activityId}-justification`,
         label:
           this.step
             .justificationPrompt ||
           "כיצד אפשר להצדיק את הטענה?",
         placeholder:
           "כתוב כאן את הצידוק שלך...",
-        value:
-          savedResponses[
-            justificationKey
-          ] || "",
+        value: justificationValue,
         buttonText: "שמור צידוק",
 
         onSave: (value) => {
-          savedResponses[
-            justificationKey
-          ] = value;
+          lessonState.updateActivityData(
+            this.activityId,
+            {
+              justification: value,
+              savedJustification:
+                value
+            }
+          );
         }
       });
   }
 
   render() {
+    this.createResponseBoxes();
+
     return `
       <div
         class="reasoning-activity"
@@ -102,11 +119,18 @@ class ClaimJustificationActivity extends BaseActivity {
   }
 
   attach() {
-    this.claimBox.attach();
-    this.justificationBox.attach();
+    if (this.claimBox) {
+      this.claimBox.attach();
+    }
+
+    if (this.justificationBox) {
+      this.justificationBox.attach();
+    }
   }
 
-  responseBoxIsSaved(responseBox) {
+  responseBoxIsSaved(
+    responseBox
+  ) {
     if (!responseBox) {
       return false;
     }
@@ -125,14 +149,22 @@ class ClaimJustificationActivity extends BaseActivity {
   }
 
   validate() {
-    return (
+    const isValid =
       this.responseBoxIsSaved(
         this.claimBox
       ) &&
       this.responseBoxIsSaved(
         this.justificationBox
-      )
-    );
+      );
+
+    if (isValid) {
+      this.appContext.lessonState
+        .markCompleted(
+          this.activityId
+        );
+    }
+
+    return isValid;
   }
 
   focus() {
@@ -163,7 +195,9 @@ class ClaimJustificationActivity extends BaseActivity {
           this.justificationBox.id
         );
 
-      if (justificationTextarea) {
+      if (
+        justificationTextarea
+      ) {
         justificationTextarea.focus();
       }
     }
