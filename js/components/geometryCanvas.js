@@ -202,8 +202,10 @@ class GeometryCanvas {
             this.activeRayStart.x,
           startY:
             this.activeRayStart.y,
-          endX: position.x,
-          endY: position.y
+          endX:
+            position.x,
+          endY:
+            position.y
         });
       };
 
@@ -480,7 +482,7 @@ class GeometryCanvas {
       "translate(-50%, -50%)";
 
     pointElement.style.zIndex =
-      "3";
+      "4";
 
     this.element.appendChild(
       pointElement
@@ -520,12 +522,16 @@ class GeometryCanvas {
 
     const rayEnd =
       this.getRayBoundaryPoint({
-        startX: originPoint.x,
-        startY: originPoint.y,
+        startX:
+          originPoint.x,
+        startY:
+          originPoint.y,
         directionX:
-          ray.endX - originPoint.x,
+          ray.endX -
+          originPoint.x,
         directionY:
-          ray.endY - originPoint.y
+          ray.endY -
+          originPoint.y
       });
 
     if (!rayEnd) {
@@ -534,11 +540,16 @@ class GeometryCanvas {
 
     const rayElement =
       this.createLineElement({
-        startX: originPoint.x,
-        startY: originPoint.y,
-        endX: rayEnd.x,
-        endY: rayEnd.y,
-        className: "geometry-ray"
+        startX:
+          originPoint.x,
+        startY:
+          originPoint.y,
+        endX:
+          rayEnd.x,
+        endY:
+          rayEnd.y,
+        className:
+          "geometry-ray"
       });
 
     rayElement.dataset.objectId =
@@ -680,6 +691,271 @@ class GeometryCanvas {
     return lineElement;
   }
 
+  drawAngleMarker({
+    firstRayId,
+    secondRayId,
+    radius = 48,
+    showDegrees = true
+  } = {}) {
+    if (!this.element) {
+      return;
+    }
+
+    const firstRay =
+      this.getObject(
+        firstRayId
+      );
+
+    const secondRay =
+      this.getObject(
+        secondRayId
+      );
+
+    if (
+      !firstRay ||
+      !secondRay ||
+      firstRay.type !== "ray" ||
+      secondRay.type !== "ray" ||
+      firstRay.originPointId !==
+        secondRay.originPointId
+    ) {
+      return;
+    }
+
+    const vertex =
+      this.getObject(
+        firstRay.originPointId
+      );
+
+    if (!vertex) {
+      return;
+    }
+
+    this.removeAngleMarker();
+
+    const firstAngle =
+      Math.atan2(
+        firstRay.endY -
+          vertex.y,
+        firstRay.endX -
+          vertex.x
+      );
+
+    const secondAngle =
+      Math.atan2(
+        secondRay.endY -
+          vertex.y,
+        secondRay.endX -
+          vertex.x
+      );
+
+    let difference =
+      secondAngle -
+      firstAngle;
+
+    while (
+      difference >
+      Math.PI
+    ) {
+      difference -=
+        2 * Math.PI;
+    }
+
+    while (
+      difference <
+      -Math.PI
+    ) {
+      difference +=
+        2 * Math.PI;
+    }
+
+    const endAngle =
+      firstAngle +
+      difference;
+
+    const startX =
+      vertex.x +
+      radius *
+      Math.cos(
+        firstAngle
+      );
+
+    const startY =
+      vertex.y +
+      radius *
+      Math.sin(
+        firstAngle
+      );
+
+    const endX =
+      vertex.x +
+      radius *
+      Math.cos(
+        endAngle
+      );
+
+    const endY =
+      vertex.y +
+      radius *
+      Math.sin(
+        endAngle
+      );
+
+    const sweepFlag =
+      difference >= 0
+        ? 1
+        : 0;
+
+    const angleDegrees =
+      Math.abs(
+        difference *
+        180 /
+        Math.PI
+      );
+
+    const svgNamespace =
+      "http://www.w3.org/2000/svg";
+
+    const svg =
+      document.createElementNS(
+        svgNamespace,
+        "svg"
+      );
+
+    svg.classList.add(
+      "geometry-angle-marker"
+    );
+
+    svg.style.position =
+      "absolute";
+
+    svg.style.inset =
+      "0";
+
+    svg.style.width =
+      "100%";
+
+    svg.style.height =
+      "100%";
+
+    svg.style.pointerEvents =
+      "none";
+
+    svg.style.zIndex =
+      "3";
+
+    svg.style.overflow =
+      "visible";
+
+    const path =
+      document.createElementNS(
+        svgNamespace,
+        "path"
+      );
+
+    path.setAttribute(
+      "d",
+      `
+        M ${startX} ${startY}
+        A ${radius} ${radius}
+        0 0 ${sweepFlag}
+        ${endX} ${endY}
+      `
+    );
+
+    path.setAttribute(
+      "class",
+      "geometry-angle-arc"
+    );
+
+    svg.appendChild(
+      path
+    );
+
+    if (showDegrees) {
+      const middleAngle =
+        firstAngle +
+        difference / 2;
+
+      const labelRadius =
+        radius + 22;
+
+      const labelX =
+        vertex.x +
+        labelRadius *
+        Math.cos(
+          middleAngle
+        );
+
+      const labelY =
+        vertex.y +
+        labelRadius *
+        Math.sin(
+          middleAngle
+        );
+
+      const label =
+        document.createElementNS(
+          svgNamespace,
+          "text"
+        );
+
+      label.setAttribute(
+        "x",
+        labelX
+      );
+
+      label.setAttribute(
+        "y",
+        labelY
+      );
+
+      label.setAttribute(
+        "class",
+        "geometry-angle-label"
+      );
+
+      label.setAttribute(
+        "text-anchor",
+        "middle"
+      );
+
+      label.setAttribute(
+        "dominant-baseline",
+        "middle"
+      );
+
+      label.textContent =
+        `${Math.round(
+          angleDegrees * 10
+        ) / 10}°`;
+
+      svg.appendChild(
+        label
+      );
+    }
+
+    this.element.appendChild(
+      svg
+    );
+  }
+
+  removeAngleMarker() {
+    if (!this.element) {
+      return;
+    }
+
+    this.element
+      .querySelectorAll(
+        ".geometry-angle-marker"
+      )
+      .forEach(
+        (marker) => {
+          marker.remove();
+        }
+      );
+  }
+
   getRayBoundaryPoint({
     startX,
     startY,
@@ -710,36 +986,40 @@ class GeometryCanvas {
 
     if (directionX > 0) {
       candidates.push(
-        (elementWidth - startX) /
-          directionX
+        (elementWidth -
+          startX) /
+        directionX
       );
     }
 
     if (directionX < 0) {
       candidates.push(
         (0 - startX) /
-          directionX
+        directionX
       );
     }
 
     if (directionY > 0) {
       candidates.push(
-        (elementHeight - startY) /
-          directionY
+        (elementHeight -
+          startY) /
+        directionY
       );
     }
 
     if (directionY < 0) {
       candidates.push(
         (0 - startY) /
-          directionY
+        directionY
       );
     }
 
     const validScales =
       candidates.filter(
         (scale) =>
-          Number.isFinite(scale) &&
+          Number.isFinite(
+            scale
+          ) &&
           scale > 0
       );
 
@@ -757,11 +1037,13 @@ class GeometryCanvas {
     return {
       x:
         startX +
-        directionX * scale,
+        directionX *
+        scale,
 
       y:
         startY +
-        directionY * scale
+        directionY *
+        scale
     };
   }
 
@@ -849,7 +1131,9 @@ class GeometryCanvas {
 
   clear() {
     this.objects = [];
+
     this.removeRayPreview();
+    this.removeAngleMarker();
 
     if (this.element) {
       this.element.innerHTML = "";
