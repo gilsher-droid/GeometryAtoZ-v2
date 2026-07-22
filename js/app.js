@@ -80,7 +80,7 @@ document.addEventListener(
         ClaimJustificationActivity
       );
 
-  renderer.register(
+renderer.register(
   "construction",
   ConstructionActivity
 );
@@ -88,6 +88,11 @@ document.addEventListener(
 renderer.register(
   "ray-construction",
   RayConstructionActivity
+);
+
+renderer.register(
+  "angle-construction",
+  AngleConstructionActivity
 );
 
       return renderer;
