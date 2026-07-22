@@ -6,14 +6,45 @@ document.addEventListener(
         "lesson-container"
       );
 
-    const lessonState =
-      new LessonState();
 
     const savedPointPositions = {};
 
     lessonEngine.loadLesson(
       lesson01
     );
+
+
+
+    const teacher =
+  new Teacher({
+    id: "teacher-demo",
+    name: "Demo Teacher"
+  });
+
+const student =
+  new Student({
+    id: "student-demo",
+    firstName: "Demo",
+    lastName: "Student"
+  });
+
+const book =
+  new Book({
+    id: "geometry-book",
+    title: "Geometry A to Z",
+    ownerId: student.id,
+    teacherId: teacher.id
+  });
+
+const bookManager =
+  new BookManager();
+
+bookManager.initialize({
+  teacher,
+  student,
+  book
+});
+
 
     lessonState.initialize(
       lesson01.id ||
@@ -468,18 +499,19 @@ document.addEventListener(
                 ];
               });
 
-            lessonState.reset();
+   interactionEngine.reset();
 
-            interactionEngine.reset();
+book.lessons = {};
 
-            lessonEngine.loadLesson(
-              lesson01
-            );
+lessonEngine.loadLesson(
+    lesson01
+);
 
-            lessonState.initialize(
-              lesson01.id ||
-              "geometry-lesson-01"
-            );
+const newLessonState =
+  bookManager.getLessonState(
+    lesson01.id ||
+    "geometry-lesson-01"
+);
 
             renderStep();
           }
