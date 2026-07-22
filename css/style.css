@@ -300,3 +300,6 @@ button:disabled {
 .ray-construction-canvas {
   cursor: crosshair;
 }
+.angle-construction-canvas {
+  cursor: crosshair;
+}
