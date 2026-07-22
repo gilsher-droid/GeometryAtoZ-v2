@@ -1,11 +1,8 @@
 class BookManager {
 
   constructor() {
-
     this.teacher = null;
-
     this.student = null;
-
     this.book = null;
   }
 
@@ -16,16 +13,36 @@ class BookManager {
   }) {
 
     this.teacher = teacher;
-
     this.student = student;
-
     this.book = book;
 
     teacher.addStudent(student.id);
-
     teacher.addBook(book.id);
 
     student.addBook(book.id);
+  }
+
+  getLessonState(lessonId) {
+
+    let lessonState =
+      this.book.getLesson(lessonId);
+
+    if (!lessonState) {
+
+      lessonState =
+        new LessonState();
+
+      lessonState.initialize(
+        lessonId
+      );
+
+      this.book.addLesson(
+        lessonId,
+        lessonState
+      );
+    }
+
+    return lessonState;
   }
 
   getBook() {
@@ -39,6 +56,7 @@ class BookManager {
   getTeacher() {
     return this.teacher;
   }
+
 }
 
 window.BookManager =
