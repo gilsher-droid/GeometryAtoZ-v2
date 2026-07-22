@@ -5,6 +5,7 @@ class ConstructionActivity extends BaseActivity {
     this.activityId = "";
     this.canvas = null;
     this.feedbackElement = null;
+    this.workspace = null;
   }
 
   render() {
@@ -16,13 +17,8 @@ class ConstructionActivity extends BaseActivity {
     this.activityId =
       getStepKey(this.step);
 
-    const activityState =
-      lessonState.getActivityState(
-        this.activityId
-      );
-
-    const savedObjects =
-      activityState.data.objects || [];
+    this.workspace =
+      lessonState.getGeometryWorkspace();
 
     this.canvas =
       new GeometryCanvas({
@@ -45,25 +41,18 @@ class ConstructionActivity extends BaseActivity {
         }
       });
 
-    this.savedObjects =
-      savedObjects;
-
     const instruction =
       this.step.instruction ||
-      this.step.prompt ||
       "לחץ בתוך המשטח כדי ליצור נקודה.";
 
     const hasPoint =
-      savedObjects.some(
-        (object) =>
-          object.type === "point"
-      );
+      this.workspace
+        .getObjectsByType("point")
+        .length > 0;
 
     return `
-      <div
-        class="construction-activity"
-        data-activity-type="construction"
-      >
+      <div class="construction-activity">
+
         <p class="interaction-instruction">
           ${instruction}
         </p>
@@ -82,30 +71,11 @@ class ConstructionActivity extends BaseActivity {
           }
         </p>
 
-        ${
-          this.step.reflection
-            ? `
-              <div class="reflection-box">
-                <strong>
-                  שאלה למחשבה:
-                </strong>
-
-                <p>
-                  ${this.step.reflection}
-                </p>
-              </div>
-            `
-            : ""
-        }
       </div>
     `;
   }
 
   attach() {
-    if (!this.canvas) {
-      return;
-    }
-
     this.canvas.attach();
 
     this.feedbackElement =
@@ -114,41 +84,40 @@ class ConstructionActivity extends BaseActivity {
       );
 
     this.canvas.loadObjects(
-      this.savedObjects || []
+      this.workspace.getAllObjects()
     );
 
     this.canvas.enablePointCreation();
   }
 
   handlePointCreated(position) {
-    const {
-      lessonState
-    } = this.appContext;
 
     const point = {
-      id:
-        `${this.activityId}-point`,
+      id: "point-A",
       type: "point",
       x: position.x,
       y: position.y,
       label:
-        this.step.pointLabel || ""
+        this.step.pointLabel || "A"
     };
 
     /*
-      בשלב הזה הפעילות מאפשרת
-      יצירת נקודה אחת בלבד.
+      GeometryWorkspace מחליף את
+      activity.data.objects
     */
-    this.canvas.loadObjects([
-      point
-    ]);
 
-    lessonState.updateActivityData(
-      this.activityId,
-      {
-        objects: [point]
-      }
+    this.workspace.clear();
+
+    this.workspace.addPoint(point);
+
+    this.canvas.loadObjects(
+      this.workspace.getAllObjects()
     );
+
+    this.appContext.lessonState
+      .markCompleted(
+        this.activityId
+      );
 
     if (this.feedbackElement) {
       this.feedbackElement.textContent =
@@ -157,20 +126,11 @@ class ConstructionActivity extends BaseActivity {
   }
 
   validate() {
-    const activityState =
-      this.appContext.lessonState
-        .getActivityState(
-          this.activityId
-        );
-
-    const objects =
-      activityState.data.objects || [];
 
     const hasPoint =
-      objects.some(
-        (object) =>
-          object.type === "point"
-      );
+      this.workspace
+        .getObjectsByType("point")
+        .length > 0;
 
     if (hasPoint) {
       this.appContext.lessonState
@@ -198,7 +158,7 @@ class ConstructionActivity extends BaseActivity {
 
     this.canvas = null;
     this.feedbackElement = null;
-    this.savedObjects = [];
+    this.workspace = null;
   }
 }
 
