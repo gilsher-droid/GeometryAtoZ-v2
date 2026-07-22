@@ -43,14 +43,20 @@ const lesson01 = {
       canvasHeight: 360
     },
 
-    {
-      id: "ray",
-      type: "interactive",
-      title: "קרן",
-      text:
-        "גרור מהנקודה לכיוון כלשהו כדי ליצור קרן.",
-      interaction: "createRay"
-    },
+{
+  id: "ray",
+  type: "ray-construction",
+  title: "קרן",
+  text:
+    "קרן מתחילה בנקודה וממשיכה ללא סוף בכיוון אחד.",
+  instruction:
+    "התחל מהנקודה A וגרור לכיוון כלשהו כדי ליצור קרן.",
+  originPointId: "point-A",
+  rayId: "ray-1",
+  rayLabel: "",
+  canvasWidth: 640,
+  canvasHeight: 360
+},
 
     {
       id: "angle",
