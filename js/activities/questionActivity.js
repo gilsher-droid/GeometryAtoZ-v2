@@ -3,48 +3,66 @@ class QuestionActivity extends BaseActivity {
     super(step, appContext);
 
     this.responseBox = null;
-    this.responseKey = "";
+    this.activityId = "";
   }
 
   render() {
     const {
-      savedResponses,
-      getStepKey,
-      getResponseKey
+      lessonState,
+      getStepKey
     } = this.appContext;
 
-    const stepKey = getStepKey(this.step);
+    this.activityId =
+      getStepKey(this.step);
 
-    this.responseKey = getResponseKey(
-      stepKey,
-      "question"
-    );
+    const activityState =
+      lessonState.getActivityState(
+        this.activityId
+      );
 
     const savedValue =
-      savedResponses[this.responseKey] || "";
+      activityState.data.savedValue ||
+      activityState.data.value ||
+      "";
 
     const question =
       this.step.question ||
       this.step.prompt ||
+      this.step.responsePrompt ||
       "כתוב את התשובה שלך.";
 
-    this.responseBox = new ResponseBox({
-      id: `response-${this.responseKey}`,
-      label: question,
-      placeholder:
-        this.step.answerPlaceholder ||
-        "כתוב כאן את התשובה שלך...",
-      value: savedValue,
-      buttonText: "שמור תשובה",
+    this.responseBox =
+      new ResponseBox({
+        id:
+          `response-${this.activityId}-question`,
+        label: question,
+        placeholder:
+          this.step.answerPlaceholder ||
+          this.step.placeholder ||
+          "כתוב כאן את התשובה שלך...",
+        value: savedValue,
+        buttonText: "שמור תשובה",
 
-      onSave: (value) => {
-        savedResponses[this.responseKey] = value;
-      }
-    });
+        onSave: (value) => {
+          lessonState.updateActivityData(
+            this.activityId,
+            {
+              value,
+              savedValue: value
+            }
+          );
+        }
+      });
 
     return `
-      <div class="teacher-prompt">
-        <strong>שאלת חשיבה:</strong>
+      <div
+        class="teacher-prompt"
+        data-activity-type="question"
+      >
+        <strong>
+          שאלת חשיבה:
+        </strong>
+
         ${this.responseBox.render()}
       </div>
     `;
@@ -69,11 +87,19 @@ class QuestionActivity extends BaseActivity {
     const savedValue =
       this.responseBox.savedValue.trim();
 
-    return (
+    const isValid =
       currentValue !== "" &&
       savedValue !== "" &&
-      currentValue === savedValue
-    );
+      currentValue === savedValue;
+
+    if (isValid) {
+      this.appContext.lessonState
+        .markCompleted(
+          this.activityId
+        );
+    }
+
+    return isValid;
   }
 
   focus() {
@@ -96,4 +122,5 @@ class QuestionActivity extends BaseActivity {
   }
 }
 
-window.QuestionActivity = QuestionActivity;
+window.QuestionActivity =
+  QuestionActivity;
