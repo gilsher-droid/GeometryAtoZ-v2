@@ -264,3 +264,18 @@ button:disabled {
     width: 100%;
   }
 }
+.geometry-canvas {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  cursor: crosshair;
+}
+
+.geometry-point-label {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  white-space: nowrap;
+  font-weight: 700;
+  pointer-events: none;
+}
