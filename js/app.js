@@ -1,7 +1,30 @@
 document.addEventListener("DOMContentLoaded", () => {
   const lessonContainer = document.getElementById("lesson-container");
 
+  const studentAnswers = {};
+
   lessonEngine.loadLesson(lesson01);
+
+  function getStepKey(step) {
+    return step.id || `step-${lessonEngine.currentStepIndex}`;
+  }
+
+  function escapeHTML(value = "") {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function getStepQuestion(step) {
+    return step.question || step.prompt || "";
+  }
+
+  function stepRequiresAnswer(step) {
+    return Boolean(getStepQuestion(step));
+  }
 
   function renderStep() {
     const step = lessonEngine.getCurrentStep();
@@ -17,6 +40,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const progress = lessonEngine.getProgress();
     const isPointStep = step.interaction === "createPoint";
+    const stepKey = getStepKey(step);
+    const question = getStepQuestion(step);
+    const savedAnswer = studentAnswers[stepKey] || "";
+    const hasSavedAnswer = savedAnswer.trim().length > 0;
 
     lessonContainer.innerHTML = `
       <section class="lesson-step">
@@ -52,7 +79,11 @@ document.addEventListener("DOMContentLoaded", () => {
                   <div id="point-canvas" class="point-canvas"></div>
 
                   <p id="point-feedback" class="interaction-feedback">
-                    עדיין לא נוצרה נקודה.
+                    ${
+                      interactionEngine.isCompleted("createPoint")
+                        ? "יצרת נקודה. עכשיו אפשר להמשיך."
+                        : "עדיין לא נוצרה נקודה."
+                    }
                   </p>
                 </div>
               `
@@ -60,11 +91,43 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           ${
-            step.prompt
+            question
               ? `
                 <div class="teacher-prompt">
                   <strong>שאלת חשיבה:</strong>
-                  <p>${step.prompt}</p>
+
+                  <p>${question}</p>
+
+                  <label for="student-answer">
+                    כתוב את תשובתך:
+                  </label>
+
+                  <textarea
+                    id="student-answer"
+                    rows="4"
+                    placeholder="${
+                      step.answerPlaceholder ||
+                      "כתוב כאן את התשובה שלך..."
+                    }"
+                  >${escapeHTML(savedAnswer)}</textarea>
+
+                  <button
+                    id="save-answer-button"
+                    type="button"
+                  >
+                    שמור תשובה
+                  </button>
+
+                  <p
+                    id="answer-feedback"
+                    class="interaction-feedback"
+                  >
+                    ${
+                      hasSavedAnswer
+                        ? "התשובה נשמרה."
+                        : "התשובה עדיין לא נשמרה."
+                    }
+                  </p>
                 </div>
               `
               : ""
@@ -151,10 +214,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const pointCanvas = document.getElementById("point-canvas");
       const pointFeedback = document.getElementById("point-feedback");
 
-      if (interactionEngine.isCompleted("createPoint")) {
-        pointFeedback.textContent = "יצרת נקודה. עכשיו אפשר להמשיך.";
-      }
-
       pointCanvas.addEventListener("click", (event) => {
         pointCanvas.innerHTML = "";
 
@@ -168,14 +227,53 @@ document.addEventListener("DOMContentLoaded", () => {
 
         pointCanvas.appendChild(point);
 
-        pointFeedback.textContent = "יצרת נקודה. עכשיו אפשר להמשיך.";
+        pointFeedback.textContent =
+          "יצרת נקודה. עכשיו אפשר להמשיך.";
 
         interactionEngine.complete("createPoint");
       });
     }
 
-    const previousButton = document.getElementById("previous-button");
-    const nextButton = document.getElementById("next-button");
+    if (question) {
+      const answerInput =
+        document.getElementById("student-answer");
+
+      const saveAnswerButton =
+        document.getElementById("save-answer-button");
+
+      const answerFeedback =
+        document.getElementById("answer-feedback");
+
+      saveAnswerButton.addEventListener("click", () => {
+        const answer = answerInput.value.trim();
+
+        if (!answer) {
+          answerFeedback.textContent =
+            "כתוב תשובה לפני השמירה.";
+
+          answerInput.focus();
+          return;
+        }
+
+        studentAnswers[stepKey] = answer;
+        answerFeedback.textContent = "התשובה נשמרה.";
+      });
+
+      answerInput.addEventListener("input", () => {
+        if (
+          studentAnswers[stepKey] !== answerInput.value.trim()
+        ) {
+          answerFeedback.textContent =
+            "יש שינויים שעדיין לא נשמרו.";
+        }
+      });
+    }
+
+    const previousButton =
+      document.getElementById("previous-button");
+
+    const nextButton =
+      document.getElementById("next-button");
 
     previousButton.addEventListener("click", () => {
       lessonEngine.previousStep();
@@ -184,10 +282,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     nextButton.addEventListener("click", () => {
       if (
-        step.interaction === "createPoint" &&
+        isPointStep &&
         !interactionEngine.isCompleted("createPoint")
       ) {
-        alert("כדי להמשיך, צור קודם נקודה בתוך שטח הפעילות.");
+        alert(
+          "כדי להמשיך, צור קודם נקודה בתוך שטח הפעילות."
+        );
+        return;
+      }
+
+      if (
+        stepRequiresAnswer(step) &&
+        !studentAnswers[stepKey]
+      ) {
+        alert(
+          "כדי להמשיך, כתוב תשובה ולחץ על שמור תשובה."
+        );
         return;
       }
 
@@ -210,6 +320,10 @@ document.addEventListener("DOMContentLoaded", () => {
         document
           .getElementById("restart-button")
           .addEventListener("click", () => {
+            Object.keys(studentAnswers).forEach((key) => {
+              delete studentAnswers[key];
+            });
+
             interactionEngine.reset();
             lessonEngine.loadLesson(lesson01);
             renderStep();
