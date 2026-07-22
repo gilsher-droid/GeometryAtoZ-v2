@@ -6,11 +6,18 @@ document.addEventListener(
         "lesson-container"
       );
 
-    const savedResponses = {};
+    const lessonState =
+      new LessonState();
+
     const savedPointPositions = {};
 
     lessonEngine.loadLesson(
       lesson01
+    );
+
+    lessonState.initialize(
+      lesson01.id ||
+      "geometry-lesson-01"
     );
 
     function getStepKey(step) {
@@ -20,18 +27,10 @@ document.addEventListener(
       );
     }
 
-    function getResponseKey(
-      stepKey,
-      responseType
-    ) {
-      return `${stepKey}-${responseType}`;
-    }
-
     const activityRenderer =
       new ActivityRenderer({
-        savedResponses,
-        getStepKey,
-        getResponseKey
+        lessonState,
+        getStepKey
       });
 
     activityRenderer.register(
@@ -59,6 +58,10 @@ document.addEventListener(
 
         return;
       }
+
+      lessonState.setCurrentStep(
+        lessonEngine.currentStepIndex
+      );
 
       const progress =
         lessonEngine.getProgress();
@@ -326,6 +329,12 @@ document.addEventListener(
         "click",
         () => {
           lessonEngine.previousStep();
+
+          lessonState.setCurrentStep(
+            lessonEngine
+              .currentStepIndex
+          );
+
           renderStep();
         }
       );
@@ -382,6 +391,12 @@ document.addEventListener(
           }
 
           lessonEngine.nextStep();
+
+          lessonState.setCurrentStep(
+            lessonEngine
+              .currentStepIndex
+          );
+
           renderStep();
         }
       );
@@ -444,14 +459,6 @@ document.addEventListener(
           "click",
           () => {
             Object
-              .keys(savedResponses)
-              .forEach((key) => {
-                delete savedResponses[
-                  key
-                ];
-              });
-
-            Object
               .keys(
                 savedPointPositions
               )
@@ -461,10 +468,17 @@ document.addEventListener(
                 ];
               });
 
+            lessonState.reset();
+
             interactionEngine.reset();
 
             lessonEngine.loadLesson(
               lesson01
+            );
+
+            lessonState.initialize(
+              lesson01.id ||
+              "geometry-lesson-01"
             );
 
             renderStep();
