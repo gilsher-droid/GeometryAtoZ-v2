@@ -506,20 +506,38 @@ button:disabled {
 }
 
 .learning-moment-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
   width: fit-content;
   min-width: 0;
   max-width: 100%;
-  padding: 2px 0;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--muted);
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #334155;
   font-weight: 600;
   text-align: start;
 }
 
+.learning-moment-button::after {
+  content: "+";
+  flex: 0 0 auto;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.learning-moment-button[aria-expanded="true"]::after {
+  content: "−";
+}
+
 .learning-moment-button:hover:not(:disabled) {
-  background: transparent;
+  border-color: #9bb8d1;
+  background: #eef6fc;
   color: var(--primary);
   transform: none;
 }

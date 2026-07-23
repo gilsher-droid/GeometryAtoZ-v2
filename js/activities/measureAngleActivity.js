@@ -207,7 +207,7 @@ class MeasureAngleActivity
             aria-expanded="false"
             aria-controls="learning-moment-content-${this.activityId}"
           >
-            רוצה לראות איך נראה מד זווית אמיתי?
+            צפה בסרטון קצר: כך נראה מד זווית אמיתי
           </button>
 
           <div
