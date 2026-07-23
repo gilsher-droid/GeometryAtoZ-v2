@@ -409,6 +409,19 @@ button:disabled {
   cursor: grab;
 }
 
+.geometry-protractor-content.is-center-snapped
+  .geometry-protractor-center {
+  fill: #e0f2fe;
+  stroke: var(--primary-light);
+  filter: drop-shadow(0 0 4px rgba(47, 128, 201, 0.35));
+}
+
+.geometry-protractor-content.is-center-snapped
+  .geometry-protractor-center-guide {
+  stroke: var(--primary-light);
+  stroke-width: 3;
+}
+
 .geometry-protractor-content.is-center-locked
   .geometry-protractor-center {
   fill: #dcfce7;
@@ -428,6 +441,27 @@ button:disabled {
   stroke: var(--success);
   stroke-width: 4;
   filter: drop-shadow(0 0 3px rgba(21, 128, 61, 0.35));
+}
+
+.geometry-protractor-content.is-baseline-snapped
+  .geometry-protractor-baseline {
+  stroke: var(--primary-light);
+  stroke-width: 4;
+}
+
+.geometry-protractor-content.is-center-locked
+  .geometry-protractor-body,
+.geometry-protractor-content.is-center-locked
+  .geometry-protractor-center,
+.geometry-protractor-content.is-center-locked
+  .geometry-protractor-center-guide {
+  cursor: default;
+}
+
+.geometry-protractor-content.is-baseline-locked
+  .geometry-protractor-rotation-handle {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 @keyframes protractor-center-lock {
@@ -465,6 +499,36 @@ button:disabled {
   border: 1px solid var(--border);
   border-radius: 18px;
   background: var(--surface-soft);
+}
+
+.protractor-lock-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 4px;
+}
+
+.protractor-lock-button {
+  min-height: 44px;
+  padding: 10px 16px;
+  background: #eaf3fb;
+  color: var(--primary);
+  border: 1px solid #b8c7d6;
+}
+
+.protractor-lock-button:hover:not(:disabled) {
+  background: #d9eaf8;
+}
+
+.protractor-lock-button[aria-pressed="true"] {
+  background: #dcfce7;
+  color: var(--success);
+  border-color: var(--success);
+}
+
+.protractor-lock-button:focus-visible {
+  outline: 3px solid rgba(47, 128, 201, 0.3);
+  outline-offset: 2px;
 }
 
 .measure-angle-controls {
@@ -516,6 +580,14 @@ button:disabled {
 }
 
 @media (max-width: 650px) {
+  .protractor-lock-controls {
+    flex-direction: column;
+  }
+
+  .protractor-lock-button {
+    width: 100%;
+  }
+
   .measure-angle-controls {
     flex-direction: column;
   }

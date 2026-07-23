@@ -33,6 +33,7 @@ class GeometryCanvas {
     this.boundPointerUpHandler = null;
 
     this.rayOriginPointId = null;
+    this.rayEndTransformer = null;
     this.activeRayStart = null;
     this.previewRayElement = null;
 
@@ -129,7 +130,8 @@ class GeometryCanvas {
   }
 
   enableRayCreation({
-    originPointId
+    originPointId,
+    transformRayEnd = null
   } = {}) {
     this.ensureAttached();
 
@@ -158,6 +160,11 @@ class GeometryCanvas {
 
     this.rayOriginPointId =
       originPointId;
+    this.rayEndTransformer =
+      typeof transformRayEnd ===
+      "function"
+        ? transformRayEnd
+        : null;
 
     this.boundPointerDownHandler =
       (event) => {
@@ -201,10 +208,19 @@ class GeometryCanvas {
 
         event.preventDefault();
 
-        const position =
+        const rawPosition =
           this.getRelativePosition(
             event
           );
+        const position =
+          this.getRayCreationEnd(
+            rawPosition
+          );
+
+        if (!position) {
+          this.removeRayPreview();
+          return;
+        }
 
         this.drawRayPreview({
           startX:
@@ -226,10 +242,20 @@ class GeometryCanvas {
 
         event.preventDefault();
 
-        const position =
+        const rawPosition =
           this.getRelativePosition(
             event
           );
+        const position =
+          this.getRayCreationEnd(
+            rawPosition
+          );
+
+        if (!position) {
+          this.removeRayPreview();
+          this.activeRayStart = null;
+          return;
+        }
 
         const distance =
           Math.hypot(
@@ -328,9 +354,47 @@ class GeometryCanvas {
     this.boundPointerUpHandler = null;
 
     this.rayOriginPointId = null;
+    this.rayEndTransformer = null;
     this.activeRayStart = null;
 
     this.removeRayPreview();
+  }
+
+  getRayCreationEnd(position) {
+    if (!this.rayEndTransformer) {
+      return position;
+    }
+
+    const transformed =
+      this.rayEndTransformer({
+        originPointId:
+          this.rayOriginPointId,
+        endX: position.x,
+        endY: position.y
+      });
+    const endX =
+      transformed
+        ? Number(
+            transformed.endX
+          )
+        : NaN;
+    const endY =
+      transformed
+        ? Number(
+            transformed.endY
+          )
+        : NaN;
+
+    return (
+      Number.isFinite(endX) &&
+      Number.isFinite(endY)
+    )
+      ? {
+          ...transformed,
+          x: endX,
+          y: endY
+        }
+      : null;
   }
 
   ensureAttached() {
@@ -1278,15 +1342,32 @@ class GeometryCanvas {
         event.preventDefault();
         event.stopPropagation();
 
+        const action =
+          actionElement.dataset
+            .protractorAction;
+
+        if (
+          (
+            action === "drag" &&
+            this.protractorState
+              .centerLocked
+          ) ||
+          (
+            action === "rotate" &&
+            this.protractorState
+              .baselineLocked
+          )
+        ) {
+          return;
+        }
+
         const position =
           this.getRelativePosition(
             event
           );
 
         this.protractorInteraction = {
-          mode:
-            actionElement.dataset
-              .protractorAction,
+          mode: action,
           pointerId:
             event.pointerId,
           pointerX: position.x,
@@ -1297,7 +1378,7 @@ class GeometryCanvas {
             this.protractorState.y,
           lockAnchor:
             this.protractorState
-              .centerLocked === true,
+              .centerSnapped === true,
           lastChangeType: null
         };
 
@@ -1344,9 +1425,9 @@ class GeometryCanvas {
               deltaX,
               deltaY
             );
-          const previousCenterLocked =
+          const previousCenterSnapped =
             this.protractorState
-              .centerLocked === true;
+              .centerSnapped === true;
           let changeType = null;
 
           if (
@@ -1407,6 +1488,8 @@ class GeometryCanvas {
             } else {
               this.protractorState.update({
                 ...candidate,
+                centerSnapped: false,
+                baselineSnapped: false,
                 centerLocked: false,
                 baselineLocked: false
               });
@@ -1414,16 +1497,16 @@ class GeometryCanvas {
           }
 
           if (
-            !previousCenterLocked &&
+            !previousCenterSnapped &&
             this.protractorState
-              .centerLocked
+              .centerSnapped
           ) {
             changeType =
               "center-snapped";
           } else if (
-            previousCenterLocked &&
+            previousCenterSnapped &&
             !this.protractorState
-              .centerLocked
+              .centerSnapped
           ) {
             changeType =
               "center-unlocked";
@@ -1450,25 +1533,24 @@ class GeometryCanvas {
 
           const rawRotation =
             pointerAngle + 90;
-          const previousBaselineLocked =
+          const previousBaselineSnapped =
             this.protractorState
-              .baselineLocked === true;
+              .baselineSnapped === true;
           const baselineTarget =
             this.getProtractorBaselineTarget(
               rawRotation
             );
           let nextRotation =
             rawRotation;
-          let baselineLocked = false;
+          let baselineSnapped = false;
           let changeType = null;
 
           if (
-            this.protractorState
-              .centerLocked &&
+            this.isProtractorCenterAlignedForSnapping() &&
             baselineTarget
           ) {
             const tolerance =
-              previousBaselineLocked
+              previousBaselineSnapped
                 ? this.getBaselineUnsnapTolerance()
                 : this.getBaselineSnapTolerance();
 
@@ -1478,24 +1560,24 @@ class GeometryCanvas {
             ) {
               nextRotation =
                 baselineTarget.rotation;
-              baselineLocked = true;
+              baselineSnapped = true;
             }
           }
 
           this.protractorState.update({
             rotation: nextRotation,
-            baselineLocked
+            baselineSnapped
           });
 
           if (
-            !previousBaselineLocked &&
-            baselineLocked
+            !previousBaselineSnapped &&
+            baselineSnapped
           ) {
             changeType =
               "baseline-snapped";
           } else if (
-            previousBaselineLocked &&
-            !baselineLocked
+            previousBaselineSnapped &&
+            !baselineSnapped
           ) {
             changeType =
               "baseline-unlocked";
@@ -1748,8 +1830,35 @@ class GeometryCanvas {
       y:
         this.protractorSnapOptions
           .centerTarget.y,
-      centerLocked: true
+      centerSnapped: true
     });
+  }
+
+  isProtractorCenterAlignedForSnapping() {
+    if (!this.protractorState) {
+      return false;
+    }
+
+    if (
+      this.protractorState
+        .centerLocked ||
+      this.protractorState
+        .centerSnapped
+    ) {
+      return true;
+    }
+
+    const distance =
+      this.getProtractorCenterDistance({
+        x: this.protractorState.x,
+        y: this.protractorState.y
+      });
+
+    return (
+      distance !== null &&
+      distance <=
+        this.getCenterSnapTolerance()
+    );
   }
 
   appendProtractorLabel({
@@ -1818,6 +1927,16 @@ class GeometryCanvas {
         `translate(${this.protractorState.x} ${this.protractorState.y}) rotate(${this.protractorState.rotation})`
       );
 
+      group.classList.toggle(
+        "is-center-snapped",
+        this.protractorState
+          .centerSnapped === true
+      );
+      group.classList.toggle(
+        "is-baseline-snapped",
+        this.protractorState
+          .baselineSnapped === true
+      );
       group.classList.toggle(
         "is-center-locked",
         this.protractorState
