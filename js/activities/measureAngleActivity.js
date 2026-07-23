@@ -135,8 +135,7 @@ class MeasureAngleActivity
         targetVertexId:
           vertexPointId,
         baselineRayId:
-          this.step.firstRayId ||
-          "ray-1",
+          this.getBaselineRayId(),
         centerSnapped:
           hasExplicitLockState
             ? savedProtractor
@@ -495,14 +494,21 @@ class MeasureAngleActivity
     const firstRay =
       this.workspace
         ? this.workspace.getObject(
-            this.step.firstRayId ||
-            "ray-1"
+            this.getBaselineRayId()
           )
         : null;
 
     return firstRay
       ? firstRay.originPointId
       : "point-A";
+  }
+
+  getBaselineRayId() {
+    return (
+      this.step.baselineRayId ||
+      this.step.firstRayId ||
+      null
+    );
   }
 
   getProtractorSnappingOptions() {
@@ -515,8 +521,7 @@ class MeasureAngleActivity
         this.getVertexPointId()
       );
     const baselineRayId =
-      this.step.firstRayId ||
-      "ray-1";
+      this.getBaselineRayId();
 
     if (!vertex) {
       return null;
@@ -604,8 +609,7 @@ class MeasureAngleActivity
           rotation:
             this.protractor.rotation,
           rayId:
-            this.step.firstRayId ||
-            "ray-1"
+            this.getBaselineRayId()
         });
 
     if (!baselineTarget) {
@@ -683,8 +687,7 @@ class MeasureAngleActivity
         rotation:
           this.protractor.rotation,
         rayId:
-          this.step.firstRayId ||
-          "ray-1"
+          this.getBaselineRayId()
       });
   }
 
@@ -904,8 +907,7 @@ class MeasureAngleActivity
         vertexPointId:
           this.getVertexPointId(),
         baselineRayId:
-          this.step.firstRayId ||
-          "ray-1",
+          this.getBaselineRayId(),
         centerTolerance:
           this.step.centerTolerance ??
           16,

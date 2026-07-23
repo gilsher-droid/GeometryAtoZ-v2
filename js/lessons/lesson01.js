@@ -97,6 +97,7 @@ const lesson01 = {
   instruction:
     "מקם את מרכז מד הזווית על הקודקוד, יישר את קו ה־0° עם הקרן הראשונה וקרא את המידה.",
   vertexPointId: "point-A",
+  baselineRayId: "ray-1",
   firstRayId: "ray-1",
   secondRayId: "ray-2",
   angleId: "angle-1",
