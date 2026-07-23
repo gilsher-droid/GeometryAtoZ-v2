@@ -22,6 +22,7 @@ class MeasureAngleActivity
     this.baselineLockButton = null;
     this.learningMomentButton = null;
     this.learningMomentContent = null;
+    this.learningMomentVideo = null;
 
     this.actualDegrees = null;
     this.hasSavedProtractor = false;
@@ -216,17 +217,36 @@ class MeasureAngleActivity
             aria-labelledby="learning-moment-button-${this.activityId}"
             hidden
           >
-            <figure class="learning-moment-placeholder">
-              <div
-                class="learning-moment-placeholder-media"
-                role="img"
-                aria-label="מקום שמור לסרטון קצר של מד זווית אמיתי"
+            <figure class="learning-moment-media">
+              <video
+                id="learning-moment-video-${this.activityId}"
+                class="learning-moment-video"
+                controls
+                playsinline
+                preload="metadata"
+                aria-label="קטע משיעור שבו גיל מציג ליוני מד זווית פיזי"
               >
-                סרטון לדוגמה
-              </div>
+                <source
+                  src="assets/videos/yoni-physical-protractor.mp4"
+                  type="video/mp4"
+                >
+                הדפדפן שלך אינו תומך בניגון וידאו.
+              </video>
 
               <figcaption>
-                בהמשך יופיע כאן סרטון קצר ומאושר שמציג מד זווית אמיתי.
+                <p>
+                  <strong>תיאור חזותי:</strong>
+                  גיל פותח את המצלמה, מחזיק מד זווית שקוף מול פניו ומקרב אותו למצלמה כדי שיוני יוכל לראות את צורתו ואת הסימונים שעליו.
+                </p>
+                <p>
+                  <strong>תמלול:</strong>
+                  יוני: "אה, מכשיר לא, בחיים לא ראיתי."
+                  גיל: "וואלה."
+                  יוני: "כן."
+                  גיל: "עכשיו הכרחת אותי לפתוח את המצלמה, יוני. רק רגע, ידידי היקר, כי לא יכול להיות שאתה לא תכיר את הדבר הזה. רואה את זה? יוני?"
+                  יוני: "כן."
+                  גיל: "זה נקרא מד זווית."
+                </p>
               </figcaption>
             </figure>
           </div>
@@ -407,6 +427,10 @@ class MeasureAngleActivity
       document.getElementById(
         `learning-moment-content-${this.activityId}`
       );
+    this.learningMomentVideo =
+      document.getElementById(
+        `learning-moment-video-${this.activityId}`
+      );
 
     this.boundInputHandler =
       () => {
@@ -447,6 +471,14 @@ class MeasureAngleActivity
               .getAttribute(
                 "aria-expanded"
               ) === "true";
+
+          if (
+            isExpanded &&
+            this.learningMomentVideo
+          ) {
+            this.learningMomentVideo
+              .pause();
+          }
 
           this.learningMomentButton
             .setAttribute(
@@ -1401,6 +1433,11 @@ class MeasureAngleActivity
         );
     }
 
+    if (this.learningMomentVideo) {
+      this.learningMomentVideo
+        .pause();
+    }
+
     if (this.canvas) {
       this.canvas.destroy();
     }
@@ -1417,6 +1454,7 @@ class MeasureAngleActivity
     this.baselineLockButton = null;
     this.learningMomentButton = null;
     this.learningMomentContent = null;
+    this.learningMomentVideo = null;
     this.boundInputHandler = null;
     this.boundSubmitHandler = null;
     this.boundCenterLockHandler =

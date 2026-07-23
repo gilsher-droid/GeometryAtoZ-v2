@@ -536,24 +536,28 @@ button:disabled {
   background: #f8fafc;
 }
 
-.learning-moment-placeholder {
+.learning-moment-media {
+  width: 100%;
+  max-width: 640px;
   margin: 0;
 }
 
-.learning-moment-placeholder-media {
-  display: grid;
-  min-height: 112px;
-  place-items: center;
-  border: 1px dashed #94a3b8;
+.learning-moment-video {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
   border-radius: 12px;
-  background: var(--surface);
-  color: var(--muted);
-  text-align: center;
+  background: #111827;
 }
 
-.learning-moment-placeholder figcaption {
+.learning-moment-media figcaption {
   margin-top: 8px;
   color: var(--muted);
+}
+
+.learning-moment-media figcaption p {
+  margin: 6px 0 0;
 }
 
 .protractor-lock-controls {
