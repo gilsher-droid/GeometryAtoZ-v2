@@ -20,6 +20,9 @@ class MeasureAngleActivity
     this.submitButton = null;
     this.centerLockButton = null;
     this.baselineLockButton = null;
+    this.learningMomentButton = null;
+    this.learningMomentContent = null;
+    this.learningMomentVideo = null;
 
     this.actualDegrees = null;
     this.hasSavedProtractor = false;
@@ -28,6 +31,8 @@ class MeasureAngleActivity
     this.boundCenterLockHandler =
       null;
     this.boundBaselineLockHandler =
+      null;
+    this.boundLearningMomentClickHandler =
       null;
   }
 
@@ -190,6 +195,62 @@ class MeasureAngleActivity
         <p class="interaction-instruction">
           ${instruction}
         </p>
+
+        <aside
+          class="learning-moment"
+          aria-label="העשרה אפשרית"
+        >
+          <button
+            id="learning-moment-button-${this.activityId}"
+            class="learning-moment-button"
+            type="button"
+            aria-expanded="false"
+            aria-controls="learning-moment-content-${this.activityId}"
+          >
+            רוצה לראות איך נראה מד זווית אמיתי?
+          </button>
+
+          <div
+            id="learning-moment-content-${this.activityId}"
+            class="learning-moment-content"
+            role="region"
+            aria-labelledby="learning-moment-button-${this.activityId}"
+            hidden
+          >
+            <figure class="learning-moment-media">
+              <video
+                id="learning-moment-video-${this.activityId}"
+                class="learning-moment-video"
+                controls
+                playsinline
+                preload="metadata"
+                aria-label="קטע משיעור שבו גיל מציג ליוני מד זווית פיזי"
+              >
+                <source
+                  src="assets/videos/yoni-physical-protractor.mp4"
+                  type="video/mp4"
+                >
+                הדפדפן שלך אינו תומך בניגון וידאו.
+              </video>
+
+              <figcaption>
+                <p>
+                  <strong>תיאור חזותי:</strong>
+                  גיל פותח את המצלמה, מחזיק מד זווית שקוף מול פניו ומקרב אותו למצלמה כדי שיוני יוכל לראות את צורתו ואת הסימונים שעליו.
+                </p>
+                <p>
+                  <strong>תמלול:</strong>
+                  יוני: "אה, מכשיר לא, בחיים לא ראיתי."
+                  גיל: "וואלה."
+                  יוני: "כן."
+                  גיל: "עכשיו הכרחת אותי לפתוח את המצלמה, יוני. רק רגע, ידידי היקר, כי לא יכול להיות שאתה לא תכיר את הדבר הזה. רואה את זה? יוני?"
+                  יוני: "כן."
+                  גיל: "זה נקרא מד זווית."
+                </p>
+              </figcaption>
+            </figure>
+          </div>
+        </aside>
 
         ${
           !angle
@@ -358,6 +419,18 @@ class MeasureAngleActivity
       document.getElementById(
         `baseline-lock-${this.activityId}`
       );
+    this.learningMomentButton =
+      document.getElementById(
+        `learning-moment-button-${this.activityId}`
+      );
+    this.learningMomentContent =
+      document.getElementById(
+        `learning-moment-content-${this.activityId}`
+      );
+    this.learningMomentVideo =
+      document.getElementById(
+        `learning-moment-video-${this.activityId}`
+      );
 
     this.boundInputHandler =
       () => {
@@ -387,6 +460,35 @@ class MeasureAngleActivity
       () => {
         this.toggleBaselineLock();
       };
+    this.boundLearningMomentClickHandler =
+      () => {
+        if (
+          this.learningMomentButton &&
+          this.learningMomentContent
+        ) {
+          const isExpanded =
+            this.learningMomentButton
+              .getAttribute(
+                "aria-expanded"
+              ) === "true";
+
+          if (
+            isExpanded &&
+            this.learningMomentVideo
+          ) {
+            this.learningMomentVideo
+              .pause();
+          }
+
+          this.learningMomentButton
+            .setAttribute(
+              "aria-expanded",
+              String(!isExpanded)
+            );
+          this.learningMomentContent
+            .hidden = isExpanded;
+        }
+      };
 
     if (this.inputElement) {
       this.inputElement.addEventListener(
@@ -415,6 +517,14 @@ class MeasureAngleActivity
         .addEventListener(
           "click",
           this.boundBaselineLockHandler
+        );
+    }
+
+    if (this.learningMomentButton) {
+      this.learningMomentButton
+        .addEventListener(
+          "click",
+          this.boundLearningMomentClickHandler
         );
     }
 
@@ -1312,6 +1422,22 @@ class MeasureAngleActivity
         );
     }
 
+    if (
+      this.learningMomentButton &&
+      this.boundLearningMomentClickHandler
+    ) {
+      this.learningMomentButton
+        .removeEventListener(
+          "click",
+          this.boundLearningMomentClickHandler
+        );
+    }
+
+    if (this.learningMomentVideo) {
+      this.learningMomentVideo
+        .pause();
+    }
+
     if (this.canvas) {
       this.canvas.destroy();
     }
@@ -1326,11 +1452,16 @@ class MeasureAngleActivity
     this.submitButton = null;
     this.centerLockButton = null;
     this.baselineLockButton = null;
+    this.learningMomentButton = null;
+    this.learningMomentContent = null;
+    this.learningMomentVideo = null;
     this.boundInputHandler = null;
     this.boundSubmitHandler = null;
     this.boundCenterLockHandler =
       null;
     this.boundBaselineLockHandler =
+      null;
+    this.boundLearningMomentClickHandler =
       null;
   }
 }
