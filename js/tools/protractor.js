@@ -8,6 +8,8 @@ class Protractor extends GeometryTool {
     visible = true,
     targetVertexId = null,
     baselineRayId = null,
+    centerSnapped = false,
+    baselineSnapped = false,
     centerLocked = false,
     baselineLocked = false
   } = {}) {
@@ -42,6 +44,17 @@ class Protractor extends GeometryTool {
       targetVertexId || null;
     this.baselineRayId =
       baselineRayId || null;
+
+    /*
+      Snapped state is temporary magnetic
+      assistance. Locked state is an
+      explicit student choice that persists
+      until the matching control releases it.
+    */
+    this.centerSnapped =
+      centerSnapped === true;
+    this.baselineSnapped =
+      baselineSnapped === true;
     this.centerLocked =
       centerLocked === true;
     this.baselineLocked =
@@ -105,6 +118,26 @@ class Protractor extends GeometryTool {
     if (
       Object.prototype.hasOwnProperty.call(
         changes,
+        "centerSnapped"
+      )
+    ) {
+      this.centerSnapped =
+        changes.centerSnapped === true;
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        changes,
+        "baselineSnapped"
+      )
+    ) {
+      this.baselineSnapped =
+        changes.baselineSnapped === true;
+    }
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        changes,
         "centerLocked"
       )
     ) {
@@ -125,6 +158,14 @@ class Protractor extends GeometryTool {
 
     if (!this.centerLocked) {
       this.baselineLocked = false;
+    }
+
+    if (this.centerLocked) {
+      this.centerSnapped = false;
+    }
+
+    if (this.baselineLocked) {
+      this.baselineSnapped = false;
     }
 
     return this;
@@ -148,6 +189,10 @@ class Protractor extends GeometryTool {
         this.targetVertexId,
       baselineRayId:
         this.baselineRayId,
+      centerSnapped:
+        this.centerSnapped,
+      baselineSnapped:
+        this.baselineSnapped,
       centerLocked:
         this.centerLocked,
       baselineLocked:

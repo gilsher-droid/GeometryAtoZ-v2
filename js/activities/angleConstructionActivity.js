@@ -59,6 +59,8 @@ class AngleConstructionActivity
         firstRayId
       );
 
+    this.quantizeExistingSecondRay();
+
     const angle =
       this.geometryEngine.getAngle({
         id:
@@ -185,9 +187,7 @@ class AngleConstructionActivity
         firstRayId
       )
     ) {
-      this.canvas.enableRayCreation({
-        originPointId
-      });
+      this.enableSecondRayCreation();
     }
   }
 
@@ -203,72 +203,29 @@ class AngleConstructionActivity
     const secondRayId =
       this.step.secondRayId ||
       "ray-2";
+    const quantizedRayEnd =
+      this.quantizeSecondRayEnd({
+        originPointId,
+        endX,
+        endY
+      });
 
-    /*
-      מונעים יצירת קרן שנייה
-      החופפת כמעט לחלוטין לקרן הראשונה.
-    */
-    const firstRay =
-      this.workspace.getObject(
-        firstRayId
-      );
-
-    const originPoint =
-      this.workspace.getObject(
-        originPointId
-      );
-
-    if (
-      firstRay &&
-      originPoint
-    ) {
-      const firstAngle =
-        Math.atan2(
-          firstRay.endY -
-            originPoint.y,
-          firstRay.endX -
-            originPoint.x
-        );
-
-      const secondAngle =
-        Math.atan2(
-          endY -
-            originPoint.y,
-          endX -
-            originPoint.x
-        );
-
-      const difference =
-        Math.abs(
-          this.normalizeAngleDifference(
-            firstAngle -
-              secondAngle
-          )
-        );
-
-      const minimumDifference =
-        5 * Math.PI / 180;
-
-      if (
-        difference <
-        minimumDifference
-      ) {
-        if (
-          this.feedbackElement
-        ) {
-          this.feedbackElement.textContent =
-            "הקרן השנייה קרובה מדי לקרן הראשונה. נסה כיוון שונה.";
-        }
-
-        return;
+    if (!quantizedRayEnd) {
+      if (this.feedbackElement) {
+        this.feedbackElement.textContent =
+          `בחר זווית בין ${this.getMinimumConstructedAngle()}° ל־${this.getMaximumConstructedAngle()}°.`;
       }
+
+      return;
     }
 
     this.workspace.addRay({
       id: secondRayId,
       originPointId,
-      endX,
-      endY,
+      endX:
+        quantizedRayEnd.endX,
+      endY:
+        quantizedRayEnd.endY,
       label:
         this.step.secondRayLabel ||
         ""
@@ -285,9 +242,7 @@ class AngleConstructionActivity
     */
     this.drawAngleMarker();
 
-    this.canvas.enableRayCreation({
-      originPointId
-    });
+    this.enableSecondRayCreation();
 
     const angle =
       this.geometryEngine.getAngle({
@@ -318,6 +273,111 @@ class AngleConstructionActivity
           angle
         );
     }
+  }
+
+  enableSecondRayCreation() {
+    const originPointId =
+      this.step.originPointId ||
+      "point-A";
+
+    this.canvas.enableRayCreation({
+      originPointId,
+      transformRayEnd:
+        (rayData) =>
+          this.quantizeSecondRayEnd(
+            rayData
+          )
+    });
+  }
+
+  quantizeSecondRayEnd({
+    originPointId,
+    endX,
+    endY
+  } = {}) {
+    if (!this.geometryEngine) {
+      return null;
+    }
+
+    return this.geometryEngine
+      .getQuantizedRayEnd({
+        originPointId:
+          originPointId ||
+          this.step.originPointId ||
+          "point-A",
+        baselineRayId:
+          this.step.firstRayId ||
+          "ray-1",
+        endX,
+        endY,
+        stepDegrees:
+          this.step
+            .angleStepDegrees ?? 1,
+        minimumAngle:
+          this.getMinimumConstructedAngle(),
+        maximumAngle:
+          this.getMaximumConstructedAngle()
+      });
+  }
+
+  quantizeExistingSecondRay() {
+    const secondRayId =
+      this.step.secondRayId ||
+      "ray-2";
+    const secondRay =
+      this.workspace.getObject(
+        secondRayId
+      );
+
+    if (!secondRay) {
+      return;
+    }
+
+    const quantized =
+      this.quantizeSecondRayEnd({
+        originPointId:
+          secondRay.originPointId,
+        endX: secondRay.endX,
+        endY: secondRay.endY
+      });
+
+    if (!quantized) {
+      return;
+    }
+
+    this.workspace.addRay({
+      ...secondRay,
+      endX: quantized.endX,
+      endY: quantized.endY
+    });
+  }
+
+  getMinimumConstructedAngle() {
+    const configured =
+      Number(
+        this.step
+          .minimumConstructedAngle
+      );
+
+    return Number.isFinite(
+      configured
+    )
+      ? configured
+      : 10;
+  }
+
+  getMaximumConstructedAngle() {
+    const configured =
+      Number(
+        this.step
+          .maximumConstructedAngle
+      );
+
+    return Number.isFinite(
+      configured
+    )
+      ? configured
+      : 170;
   }
 
   drawAngleMarker() {
@@ -361,31 +421,6 @@ class AngleConstructionActivity
     });
   }
 
-  normalizeAngleDifference(
-    radians
-  ) {
-    let normalized =
-      radians;
-
-    while (
-      normalized >
-      Math.PI
-    ) {
-      normalized -=
-        2 * Math.PI;
-    }
-
-    while (
-      normalized <
-      -Math.PI
-    ) {
-      normalized +=
-        2 * Math.PI;
-    }
-
-    return normalized;
-  }
-
   getFeedbackText(angle) {
     if (!angle) {
       return (
@@ -395,8 +430,8 @@ class AngleConstructionActivity
 
     const roundedDegrees =
       Math.round(
-        angle.degrees * 10
-      ) / 10;
+        angle.degrees
+      );
 
     return (
       `נוצרה זווית בגודל משוער של ${roundedDegrees}°.`

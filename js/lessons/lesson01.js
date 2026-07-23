@@ -71,6 +71,9 @@ const lesson01 = {
   secondRayId: "ray-2",
   angleId: "angle-1",
   angleLabel: "",
+  angleStepDegrees: 1,
+  minimumConstructedAngle: 10,
+  maximumConstructedAngle: 170,
   canvasWidth: 640,
   canvasHeight: 360
 },

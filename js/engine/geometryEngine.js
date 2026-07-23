@@ -175,11 +175,29 @@ class GeometryEngine {
         safeDotProduct
       );
 
-    return (
+    const degrees =
       radians *
       180 /
-      Math.PI
-    );
+      Math.PI;
+    const nearestInteger =
+      Math.round(
+        degrees
+      );
+
+    /*
+      Trigonometric coordinates for an
+      integer angle can differ by a tiny
+      floating-point residue. Normalizing
+      only that residue keeps persisted
+      whole-degree geometry whole without
+      rounding genuinely decimal angles.
+    */
+    return Math.abs(
+      degrees -
+        nearestInteger
+    ) < 1e-10
+      ? nearestInteger
+      : degrees;
   }
 
   calculateDistance(
@@ -237,6 +255,183 @@ class GeometryEngine {
     return Math.abs(
       difference
     );
+  }
+
+  quantizeAngleDegrees(
+    angle,
+    stepDegrees = 1
+  ) {
+    const numericAngle =
+      Number(angle);
+    const numericStep =
+      Number(stepDegrees);
+    const safeStep =
+      Number.isFinite(
+        numericStep
+      ) &&
+      numericStep > 0
+        ? numericStep
+        : 1;
+
+    if (
+      !Number.isFinite(
+        numericAngle
+      )
+    ) {
+      return null;
+    }
+
+    return Math.round(
+      numericAngle / safeStep
+    ) * safeStep;
+  }
+
+  getQuantizedRayEnd({
+    originPointId,
+    baselineRayId,
+    endX,
+    endY,
+    stepDegrees = 1,
+    minimumAngle = 10,
+    maximumAngle = 170
+  } = {}) {
+    const origin =
+      this.getPoint(
+        originPointId
+      );
+    const baselineVector =
+      this.getRayVector(
+        baselineRayId
+      );
+    const numericEndX =
+      Number(endX);
+    const numericEndY =
+      Number(endY);
+
+    if (
+      !origin ||
+      !baselineVector ||
+      !Number.isFinite(
+        numericEndX
+      ) ||
+      !Number.isFinite(
+        numericEndY
+      )
+    ) {
+      return null;
+    }
+
+    const directionX =
+      numericEndX - origin.x;
+    const directionY =
+      numericEndY - origin.y;
+    const distance =
+      Math.hypot(
+        directionX,
+        directionY
+      );
+
+    if (distance === 0) {
+      return null;
+    }
+
+    const baselineDegrees =
+      Math.atan2(
+        baselineVector.y,
+        baselineVector.x
+      ) *
+      180 /
+      Math.PI;
+    const pointerDegrees =
+      Math.atan2(
+        directionY,
+        directionX
+      ) *
+      180 /
+      Math.PI;
+    const signedDifference =
+      this.normalizeDegrees(
+        pointerDegrees -
+          baselineDegrees +
+          180
+      ) - 180;
+    const quantizedMagnitude =
+      this.quantizeAngleDegrees(
+        Math.abs(
+          signedDifference
+        ),
+        stepDegrees
+      );
+    const numericMinimum =
+      Number(minimumAngle);
+    const numericMaximum =
+      Number(maximumAngle);
+    const safeMinimum =
+      Number.isFinite(
+        numericMinimum
+      )
+        ? Math.max(
+            0,
+            numericMinimum
+          )
+        : 10;
+    const safeMaximum =
+      Number.isFinite(
+        numericMaximum
+      )
+        ? Math.min(
+            180,
+            numericMaximum
+          )
+        : 170;
+
+    if (
+      quantizedMagnitude === null ||
+      quantizedMagnitude <
+        safeMinimum ||
+      quantizedMagnitude >
+        Math.max(
+          safeMinimum,
+          safeMaximum
+        )
+    ) {
+      return null;
+    }
+
+    const directionSign =
+      signedDifference < 0
+        ? -1
+        : 1;
+    const quantizedDegrees =
+      directionSign *
+      quantizedMagnitude;
+    const rayRadians =
+      (
+        baselineDegrees +
+        quantizedDegrees
+      ) *
+      Math.PI /
+      180;
+
+    return {
+      endX:
+        origin.x +
+        distance *
+        Math.cos(
+          rayRadians
+        ),
+      endY:
+        origin.y +
+        distance *
+        Math.sin(
+          rayRadians
+        ),
+      angleDegrees:
+        quantizedMagnitude,
+      signedAngleDegrees:
+        quantizedDegrees,
+      distance
+    };
   }
 
   getClosestBaselineRotation({

@@ -18,11 +18,17 @@ class MeasureAngleActivity
     this.inputElement = null;
     this.feedbackElement = null;
     this.submitButton = null;
+    this.centerLockButton = null;
+    this.baselineLockButton = null;
 
     this.actualDegrees = null;
     this.hasSavedProtractor = false;
     this.boundInputHandler = null;
     this.boundSubmitHandler = null;
+    this.boundCenterLockHandler =
+      null;
+    this.boundBaselineLockHandler =
+      null;
   }
 
   render() {
@@ -77,6 +83,17 @@ class MeasureAngleActivity
     const savedProtractor =
       activityState.data
         .protractor || {};
+    const hasExplicitLockState =
+      Object.prototype
+        .hasOwnProperty.call(
+          savedProtractor,
+          "centerSnapped"
+        ) ||
+      Object.prototype
+        .hasOwnProperty.call(
+          savedProtractor,
+          "baselineSnapped"
+        );
 
     this.hasSavedProtractor =
       Boolean(
@@ -120,15 +137,37 @@ class MeasureAngleActivity
         baselineRayId:
           this.step.firstRayId ||
           "ray-1",
+        centerSnapped:
+          hasExplicitLockState
+            ? savedProtractor
+                .centerSnapped ??
+              false
+            : savedProtractor
+                .centerLocked ??
+              false,
+        baselineSnapped:
+          hasExplicitLockState
+            ? savedProtractor
+                .baselineSnapped ??
+              false
+            : savedProtractor
+                .baselineLocked ??
+              false,
         centerLocked:
-          savedProtractor
-            .centerLocked ?? false,
+          hasExplicitLockState
+            ? savedProtractor
+                .centerLocked ??
+              false
+            : false,
         baselineLocked:
-          savedProtractor
-            .baselineLocked ?? false
+          hasExplicitLockState
+            ? savedProtractor
+                .baselineLocked ??
+              false
+            : false
       });
 
-    this.restoreProtractorLocks();
+    this.restoreProtractorState();
 
     this.canvas =
       new GeometryCanvas({
@@ -162,6 +201,38 @@ class MeasureAngleActivity
             `
             : ""
         }
+
+        <div
+          class="protractor-lock-controls"
+          role="group"
+          aria-label="בקרי נעילת מד הזווית"
+        >
+          <button
+            id="center-lock-${this.activityId}"
+            class="protractor-lock-button"
+            type="button"
+            ${
+              this.isCenterLockControlEnabled()
+                ? ""
+                : "disabled"
+            }
+          >
+            ${this.getCenterLockLabel()}
+          </button>
+
+          <button
+            id="baseline-lock-${this.activityId}"
+            class="protractor-lock-button"
+            type="button"
+            ${
+              this.isBaselineLockControlEnabled()
+                ? ""
+                : "disabled"
+            }
+          >
+            ${this.getBaselineLockLabel()}
+          </button>
+        </div>
 
         ${this.canvas.render()}
 
@@ -255,6 +326,7 @@ class MeasureAngleActivity
                   this.activityId
                 );
               this.save();
+              this.updateLockControls();
               this.showFeedback(
                 this.getProtractorChangeFeedback(
                   interactionEvent
@@ -279,6 +351,14 @@ class MeasureAngleActivity
       document.getElementById(
         `measure-submit-${this.activityId}`
       );
+    this.centerLockButton =
+      document.getElementById(
+        `center-lock-${this.activityId}`
+      );
+    this.baselineLockButton =
+      document.getElementById(
+        `baseline-lock-${this.activityId}`
+      );
 
     this.boundInputHandler =
       () => {
@@ -300,6 +380,14 @@ class MeasureAngleActivity
           this.focus();
         }
       };
+    this.boundCenterLockHandler =
+      () => {
+        this.toggleCenterLock();
+      };
+    this.boundBaselineLockHandler =
+      () => {
+        this.toggleBaselineLock();
+      };
 
     if (this.inputElement) {
       this.inputElement.addEventListener(
@@ -314,6 +402,24 @@ class MeasureAngleActivity
         this.boundSubmitHandler
       );
     }
+
+    if (this.centerLockButton) {
+      this.centerLockButton
+        .addEventListener(
+          "click",
+          this.boundCenterLockHandler
+        );
+    }
+
+    if (this.baselineLockButton) {
+      this.baselineLockButton
+        .addEventListener(
+          "click",
+          this.boundBaselineLockHandler
+        );
+    }
+
+    this.updateLockControls();
   }
 
   getAngle() {
@@ -450,7 +556,7 @@ class MeasureAngleActivity
     };
   }
 
-  restoreProtractorLocks() {
+  restoreProtractorState() {
     if (
       !this.protractor ||
       !this.geometryEngine
@@ -464,23 +570,30 @@ class MeasureAngleActivity
       );
 
     if (
-      !vertex ||
-      !this.protractor.centerLocked
+      !vertex
     ) {
       this.protractor.update({
+        centerSnapped: false,
+        baselineSnapped: false,
         centerLocked: false,
         baselineLocked: false
       });
       return;
     }
 
-    this.protractor.setPosition(
-      vertex.x,
-      vertex.y
-    );
+    if (
+      this.protractor.centerLocked ||
+      this.protractor.centerSnapped
+    ) {
+      this.protractor.setPosition(
+        vertex.x,
+        vertex.y
+      );
+    }
 
     if (
-      !this.protractor.baselineLocked
+      !this.protractor.baselineLocked &&
+      !this.protractor.baselineSnapped
     ) {
       return;
     }
@@ -497,6 +610,7 @@ class MeasureAngleActivity
 
     if (!baselineTarget) {
       this.protractor.update({
+        baselineSnapped: false,
         baselineLocked: false
       });
       return;
@@ -505,8 +619,269 @@ class MeasureAngleActivity
     this.protractor.update({
       rotation:
         baselineTarget.rotation,
+      centerLocked:
+        this.protractor
+          .baselineLocked
+          ? true
+          : this.protractor
+              .centerLocked,
+      baselineSnapped:
+        this.protractor
+          .baselineLocked
+          ? false
+          : this.protractor
+              .baselineSnapped,
+      baselineLocked:
+        this.protractor
+          .baselineLocked
+    });
+  }
+
+  getCenterLockLabel() {
+    return (
+      this.protractor &&
+      this.protractor.centerLocked
+    )
+      ? "שחרר מהקודקוד"
+      : "נעל לקודקוד";
+  }
+
+  getBaselineLockLabel() {
+    return (
+      this.protractor &&
+      this.protractor.baselineLocked
+    )
+      ? "שחרר יישור מהקרן"
+      : "יישר ונעל לקרן התחתונה";
+  }
+
+  isCenterLockControlEnabled() {
+    if (
+      !this.protractor ||
+      this.actualDegrees === null
+    ) {
+      return false;
+    }
+
+    return (
+      this.protractor.centerLocked ||
+      this.getAlignmentStatus()
+        .centerAligned
+    );
+  }
+
+  getBaselineLockTarget() {
+    if (
+      !this.geometryEngine ||
+      !this.protractor
+    ) {
+      return null;
+    }
+
+    return this.geometryEngine
+      .getClosestBaselineRotation({
+        rotation:
+          this.protractor.rotation,
+        rayId:
+          this.step.firstRayId ||
+          "ray-1"
+      });
+  }
+
+  isBaselineLockControlEnabled() {
+    if (
+      !this.protractor ||
+      this.actualDegrees === null
+    ) {
+      return false;
+    }
+
+    if (this.protractor.baselineLocked) {
+      return true;
+    }
+
+    const alignment =
+      this.getAlignmentStatus();
+    const target =
+      this.getBaselineLockTarget();
+
+    return Boolean(
+      alignment.centerAligned &&
+      target &&
+      target.difference <=
+        (
+          this.step
+            .baselineSnapTolerance ??
+          6
+        )
+    );
+  }
+
+  updateLockControls() {
+    if (this.centerLockButton) {
+      this.centerLockButton.textContent =
+        this.getCenterLockLabel();
+      this.centerLockButton.disabled =
+        !this.isCenterLockControlEnabled();
+      this.centerLockButton
+        .setAttribute(
+          "aria-pressed",
+          String(
+            this.protractor
+              ? this.protractor
+                  .centerLocked
+              : false
+          )
+        );
+    }
+
+    if (this.baselineLockButton) {
+      this.baselineLockButton
+        .textContent =
+          this.getBaselineLockLabel();
+      this.baselineLockButton.disabled =
+        !this
+          .isBaselineLockControlEnabled();
+      this.baselineLockButton
+        .setAttribute(
+          "aria-pressed",
+          String(
+            this.protractor
+              ? this.protractor
+                  .baselineLocked
+              : false
+          )
+        );
+    }
+  }
+
+  toggleCenterLock() {
+    if (
+      !this.protractor ||
+      !this.canvas
+    ) {
+      return;
+    }
+
+    if (this.protractor.centerLocked) {
+      this.protractor.update({
+        centerLocked: false,
+        baselineLocked: false,
+        centerSnapped: true,
+        baselineSnapped:
+          this.protractor
+            .baselineLocked ||
+          this.protractor
+            .baselineSnapped
+      });
+      this.canvas.updateProtractor();
+      this.appContext.lessonState
+        .markIncomplete(
+          this.activityId
+        );
+      this.save();
+      this.updateLockControls();
+      this.showFeedback(
+        "נעילת המרכז שוחררה."
+      );
+      return;
+    }
+
+    if (
+      !this.isCenterLockControlEnabled()
+    ) {
+      return;
+    }
+
+    const vertex =
+      this.geometryEngine.getPoint(
+        this.getVertexPointId()
+      );
+
+    if (!vertex) {
+      return;
+    }
+
+    this.protractor.update({
+      x: vertex.x,
+      y: vertex.y,
+      centerSnapped: false,
+      centerLocked: true
+    });
+    this.canvas.updateProtractor();
+    this.appContext.lessonState
+      .markIncomplete(
+        this.activityId
+      );
+    this.save();
+    this.updateLockControls();
+    this.showFeedback(
+      "מרכז מד הזווית נעול לקודקוד."
+    );
+  }
+
+  toggleBaselineLock() {
+    if (
+      !this.protractor ||
+      !this.canvas
+    ) {
+      return;
+    }
+
+    if (this.protractor.baselineLocked) {
+      this.protractor.update({
+        baselineLocked: false,
+        baselineSnapped: true
+      });
+      this.canvas.updateProtractor();
+      this.appContext.lessonState
+        .markIncomplete(
+          this.activityId
+        );
+      this.save();
+      this.updateLockControls();
+      this.showFeedback(
+        "נעילת קו ה־0° שוחררה."
+      );
+      return;
+    }
+
+    if (
+      !this.isBaselineLockControlEnabled()
+    ) {
+      return;
+    }
+
+    const vertex =
+      this.geometryEngine.getPoint(
+        this.getVertexPointId()
+      );
+    const target =
+      this.getBaselineLockTarget();
+
+    if (!vertex || !target) {
+      return;
+    }
+
+    this.protractor.update({
+      x: vertex.x,
+      y: vertex.y,
+      rotation: target.rotation,
+      centerSnapped: false,
+      baselineSnapped: false,
+      centerLocked: true,
       baselineLocked: true
     });
+    this.canvas.updateProtractor();
+    this.appContext.lessonState
+      .markIncomplete(
+        this.activityId
+      );
+    this.save();
+    this.updateLockControls();
+    this.showFeedback(
+      "קו ה־0° נעול לקרן התחתונה. כעת קרא את הזווית."
+    );
   }
 
   getAlignmentStatus() {
@@ -545,7 +920,14 @@ class MeasureAngleActivity
       this.protractor &&
       this.protractor.baselineLocked
     ) {
-      return "קו ה־0° ננעל לקרן הראשונה. כעת קרא את הזווית.";
+      return "קו ה־0° נעול לקרן התחתונה. כעת קרא את הזווית.";
+    }
+
+    if (
+      this.protractor &&
+      this.protractor.baselineSnapped
+    ) {
+      return "קו ה־0° נצמד זמנית לקרן הראשונה. אפשר לנעול אותו.";
     }
 
     const alignment =
@@ -580,14 +962,14 @@ class MeasureAngleActivity
       changeType ===
       "center-snapped"
     ) {
-      return "מרכז מד הזווית ננעל לקודקוד.";
+      return "מרכז מד הזווית נצמד זמנית לקודקוד. אפשר לנעול אותו.";
     }
 
     if (
       changeType ===
       "baseline-snapped"
     ) {
-      return "קו ה־0° ננעל לקרן הראשונה. כעת קרא את הזווית.";
+      return "קו ה־0° נצמד זמנית לקרן הראשונה. אפשר לנעול אותו.";
     }
 
     return this.getAlignmentFeedback();
@@ -718,7 +1100,7 @@ class MeasureAngleActivity
 
     if (!isValid) {
       this.showFeedback(
-        "בדוק מאיזו סקלה צריך להתחיל לקרוא ועגל למעלה השלמה הקרובה ביותר."
+        "בדוק מאיזו סקלה צריך להתחיל לקרוא והזן את המידה השלמה."
       );
       this.appContext.lessonState
         .markIncomplete(
@@ -809,6 +1191,9 @@ class MeasureAngleActivity
 
     if (
       !Number.isFinite(
+        numericAnswer
+      ) ||
+      !Number.isInteger(
         numericAnswer
       ) ||
       numericAnswer < 0 ||
@@ -903,6 +1288,28 @@ class MeasureAngleActivity
       );
     }
 
+    if (
+      this.centerLockButton &&
+      this.boundCenterLockHandler
+    ) {
+      this.centerLockButton
+        .removeEventListener(
+          "click",
+          this.boundCenterLockHandler
+        );
+    }
+
+    if (
+      this.baselineLockButton &&
+      this.boundBaselineLockHandler
+    ) {
+      this.baselineLockButton
+        .removeEventListener(
+          "click",
+          this.boundBaselineLockHandler
+        );
+    }
+
     if (this.canvas) {
       this.canvas.destroy();
     }
@@ -915,8 +1322,14 @@ class MeasureAngleActivity
     this.inputElement = null;
     this.feedbackElement = null;
     this.submitButton = null;
+    this.centerLockButton = null;
+    this.baselineLockButton = null;
     this.boundInputHandler = null;
     this.boundSubmitHandler = null;
+    this.boundCenterLockHandler =
+      null;
+    this.boundBaselineLockHandler =
+      null;
   }
 }
 
