@@ -501,6 +501,61 @@ button:disabled {
   background: var(--surface-soft);
 }
 
+.learning-moment {
+  margin: 8px 0 18px;
+}
+
+.learning-moment-button {
+  width: fit-content;
+  min-width: 0;
+  max-width: 100%;
+  padding: 2px 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+  text-align: start;
+}
+
+.learning-moment-button:hover:not(:disabled) {
+  background: transparent;
+  color: var(--primary);
+  transform: none;
+}
+
+.learning-moment-button:focus-visible {
+  outline: 3px solid rgba(47, 128, 201, 0.3);
+  outline-offset: 4px;
+}
+
+.learning-moment-content {
+  margin-top: 10px;
+  padding: 14px;
+  border-inline-start: 3px solid var(--border);
+  background: #f8fafc;
+}
+
+.learning-moment-placeholder {
+  margin: 0;
+}
+
+.learning-moment-placeholder-media {
+  display: grid;
+  min-height: 112px;
+  place-items: center;
+  border: 1px dashed #94a3b8;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--muted);
+  text-align: center;
+}
+
+.learning-moment-placeholder figcaption {
+  margin-top: 8px;
+  color: var(--muted);
+}
+
 .protractor-lock-controls {
   display: flex;
   flex-wrap: wrap;
