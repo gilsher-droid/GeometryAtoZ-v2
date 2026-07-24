@@ -1,3 +1,9 @@
+const PHYSICAL_PROTRACTOR_LEARNING_MOMENT =
+  Object.freeze({
+    provider: "youtube",
+    videoId: "-SW1jEGFS6A"
+  });
+
 class MeasureAngleActivity
   extends BaseActivity {
   constructor(
@@ -207,7 +213,7 @@ class MeasureAngleActivity
             aria-expanded="false"
             aria-controls="learning-moment-content-${this.activityId}"
           >
-            רוצה לראות איך נראה מד זווית אמיתי?
+            צפה בסרטון קצר: כך נראה מד זווית אמיתי
           </button>
 
           <div
@@ -218,20 +224,18 @@ class MeasureAngleActivity
             hidden
           >
             <figure class="learning-moment-media">
-              <video
-                id="learning-moment-video-${this.activityId}"
-                class="learning-moment-video"
-                controls
-                playsinline
-                preload="metadata"
-                aria-label="קטע משיעור שבו גיל מציג ליוני מד זווית פיזי"
-              >
-                <source
-                  src="assets/videos/yoni-physical-protractor.mp4"
-                  type="video/mp4"
-                >
-                הדפדפן שלך אינו תומך בניגון וידאו.
-              </video>
+              <div class="learning-moment-video-frame">
+                <iframe
+                  id="learning-moment-video-${this.activityId}"
+                  class="learning-moment-video"
+                  src="${this.getLearningMomentVideoUrl()}"
+                  title="הדגמה של מד זווית פיזי"
+                  loading="lazy"
+                  allow="encrypted-media; picture-in-picture; web-share"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allowfullscreen
+                ></iframe>
+              </div>
 
               <figcaption>
                 <p>
@@ -476,8 +480,7 @@ class MeasureAngleActivity
             isExpanded &&
             this.learningMomentVideo
           ) {
-            this.learningMomentVideo
-              .pause();
+            this.pauseLearningMomentVideo();
           }
 
           this.learningMomentButton
@@ -551,6 +554,45 @@ class MeasureAngleActivity
           this.step.angleLabel ||
           ""
       });
+  }
+
+  getLearningMomentVideoUrl() {
+    if (
+      PHYSICAL_PROTRACTOR_LEARNING_MOMENT
+        .provider !== "youtube"
+    ) {
+      return "";
+    }
+
+    const videoId =
+      PHYSICAL_PROTRACTOR_LEARNING_MOMENT
+        .videoId;
+
+    return (
+      "https://www.youtube-nocookie.com/embed/" +
+      `${videoId}?enablejsapi=1&rel=0`
+    );
+  }
+
+  pauseLearningMomentVideo() {
+    if (
+      !this.learningMomentVideo ||
+      !this.learningMomentVideo
+        .contentWindow
+    ) {
+      return;
+    }
+
+    this.learningMomentVideo
+      .contentWindow
+      .postMessage(
+        JSON.stringify({
+          event: "command",
+          func: "pauseVideo",
+          args: []
+        }),
+        "https://www.youtube-nocookie.com"
+      );
   }
 
   positionInitialProtractor() {
@@ -1434,8 +1476,7 @@ class MeasureAngleActivity
     }
 
     if (this.learningMomentVideo) {
-      this.learningMomentVideo
-        .pause();
+      this.pauseLearningMomentVideo();
     }
 
     if (this.canvas) {
