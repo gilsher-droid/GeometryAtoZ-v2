@@ -191,7 +191,9 @@ class MeasureAngleActivity
 
     const instruction =
       this.step.instruction ||
-      "מקם את מרכז מד הזווית על הקודקוד, יישר את קו ה־0° עם הקרן הראשונה וקרא את המידה.";
+      i18n.t(
+        "lesson.measure.instruction"
+      );
 
     return `
       <div
@@ -204,7 +206,9 @@ class MeasureAngleActivity
 
         <aside
           class="learning-moment"
-          aria-label="העשרה אפשרית"
+          aria-label="${i18n.t(
+            "measure.learningMomentAria"
+          )}"
         >
           <button
             id="learning-moment-button-${this.activityId}"
@@ -213,7 +217,9 @@ class MeasureAngleActivity
             aria-expanded="false"
             aria-controls="learning-moment-content-${this.activityId}"
           >
-            צפה בסרטון קצר: כך נראה מד זווית אמיתי
+            ${i18n.t(
+              "measure.learningMomentButton"
+            )}
           </button>
 
           <div
@@ -229,7 +235,9 @@ class MeasureAngleActivity
                   id="learning-moment-video-${this.activityId}"
                   class="learning-moment-video"
                   src="${this.getLearningMomentVideoUrl()}"
-                  title="הדגמה של מד זווית פיזי"
+                  title="${i18n.t(
+                    "measure.videoTitle"
+                  )}"
                   loading="lazy"
                   allow="encrypted-media; picture-in-picture; web-share"
                   referrerpolicy="strict-origin-when-cross-origin"
@@ -239,17 +247,24 @@ class MeasureAngleActivity
 
               <figcaption>
                 <p>
-                  <strong>תיאור חזותי:</strong>
-                  גיל פותח את המצלמה, מחזיק מד זווית שקוף מול פניו ומקרב אותו למצלמה כדי שיוני יוכל לראות את צורתו ואת הסימונים שעליו.
+                  <strong>
+                    ${i18n.t(
+                      "measure.visualDescriptionLabel"
+                    )}
+                  </strong>
+                  ${i18n.t(
+                    "measure.visualDescription"
+                  )}
                 </p>
                 <p>
-                  <strong>תמלול:</strong>
-                  יוני: "אה, מכשיר לא, בחיים לא ראיתי."
-                  גיל: "וואלה."
-                  יוני: "כן."
-                  גיל: "עכשיו הכרחת אותי לפתוח את המצלמה, יוני. רק רגע, ידידי היקר, כי לא יכול להיות שאתה לא תכיר את הדבר הזה. רואה את זה? יוני?"
-                  יוני: "כן."
-                  גיל: "זה נקרא מד זווית."
+                  <strong>
+                    ${i18n.t(
+                      "measure.transcriptLabel"
+                    )}
+                  </strong>
+                  ${i18n.t(
+                    "measure.transcript"
+                  )}
                 </p>
               </figcaption>
             </figure>
@@ -260,7 +275,9 @@ class MeasureAngleActivity
           !angle
             ? `
               <p class="interaction-feedback">
-                לא נמצאה זווית למדידה. חזור לשלב יצירת הזווית.
+                ${i18n.t(
+                  "measure.noAngle"
+                )}
               </p>
             `
             : ""
@@ -269,7 +286,9 @@ class MeasureAngleActivity
         <div
           class="protractor-lock-controls"
           role="group"
-          aria-label="בקרי נעילת מד הזווית"
+          aria-label="${i18n.t(
+            "measure.lockControlsAria"
+          )}"
         >
           <button
             id="center-lock-${this.activityId}"
@@ -305,7 +324,9 @@ class MeasureAngleActivity
             for="angle-answer-${this.activityId}"
           >
             <strong>
-              כתוב את גודל הזווית במעלות שלמות.
+              ${i18n.t(
+                "measure.answerPrompt"
+              )}
             </strong>
           </label>
 
@@ -319,7 +340,9 @@ class MeasureAngleActivity
                 step="1"
                 inputmode="numeric"
                 value="${this.escapeAttribute(displayedSavedValue)}"
-                placeholder="לדוגמה: 65"
+                placeholder="${i18n.t(
+                  "measure.answerPlaceholder"
+                )}"
                 ${angle ? "" : "disabled"}
               />
               <span
@@ -333,7 +356,9 @@ class MeasureAngleActivity
               type="button"
               ${angle ? "" : "disabled"}
             >
-              בדוק תשובה
+              ${i18n.t(
+                "measure.check"
+              )}
             </button>
           </div>
 
@@ -798,8 +823,12 @@ class MeasureAngleActivity
       this.protractor &&
       this.protractor.centerLocked
     )
-      ? "שחרר מהקודקוד"
-      : "נעל לקודקוד";
+      ? i18n.t(
+          "measure.unlockCenter"
+        )
+      : i18n.t(
+          "measure.lockCenter"
+        );
   }
 
   getBaselineLockLabel() {
@@ -807,8 +836,12 @@ class MeasureAngleActivity
       this.protractor &&
       this.protractor.baselineLocked
     )
-      ? "שחרר יישור מהקרן"
-      : "יישר ונעל לקרן התחתונה";
+      ? i18n.t(
+          "measure.unlockBaseline"
+        )
+      : i18n.t(
+          "measure.lockBaseline"
+        );
   }
 
   isCenterLockControlEnabled() {
@@ -937,7 +970,9 @@ class MeasureAngleActivity
       this.save();
       this.updateLockControls();
       this.showFeedback(
-        "נעילת המרכז שוחררה."
+        i18n.t(
+          "measure.centerReleased"
+        )
       );
       return;
     }
@@ -971,7 +1006,9 @@ class MeasureAngleActivity
     this.save();
     this.updateLockControls();
     this.showFeedback(
-      "מרכז מד הזווית נעול לקודקוד."
+      i18n.t(
+        "measure.centerLocked"
+      )
     );
   }
 
@@ -996,7 +1033,9 @@ class MeasureAngleActivity
       this.save();
       this.updateLockControls();
       this.showFeedback(
-        "נעילת קו ה־0° שוחררה."
+        i18n.t(
+          "measure.baselineReleased"
+        )
       );
       return;
     }
@@ -1035,7 +1074,9 @@ class MeasureAngleActivity
     this.save();
     this.updateLockControls();
     this.showFeedback(
-      "קו ה־0° נעול לקרן התחתונה. כעת קרא את הזווית."
+      i18n.t(
+        "measure.baselineLocked"
+      )
     );
   }
 
@@ -1074,14 +1115,18 @@ class MeasureAngleActivity
       this.protractor &&
       this.protractor.baselineLocked
     ) {
-      return "קו ה־0° נעול לקרן התחתונה. כעת קרא את הזווית.";
+      return i18n.t(
+        "measure.baselineLocked"
+      );
     }
 
     if (
       this.protractor &&
       this.protractor.baselineSnapped
     ) {
-      return "קו ה־0° נצמד זמנית לקרן הראשונה. אפשר לנעול אותו.";
+      return i18n.t(
+        "measure.baselineTemporarilySnapped"
+      );
     }
 
     const alignment =
@@ -1091,17 +1136,23 @@ class MeasureAngleActivity
       alignment.status ===
       "center-not-aligned"
     ) {
-      return "מקם את מרכז מד הזווית על קודקוד הזווית.";
+      return i18n.t(
+        "measure.positionCenter"
+      );
     }
 
     if (
       alignment.status ===
       "baseline-not-aligned"
     ) {
-      return "סובב את מד הזווית כך שקו ה־0° יהיה מונח על הקרן הראשונה.";
+      return i18n.t(
+        "measure.alignBaseline"
+      );
     }
 
-    return "מד הזווית מוכן לקריאה. בדוק היכן הקרן השנייה פוגשת את הסקלה.";
+    return i18n.t(
+      "measure.ready"
+    );
   }
 
   getProtractorChangeFeedback(
@@ -1116,14 +1167,18 @@ class MeasureAngleActivity
       changeType ===
       "center-snapped"
     ) {
-      return "מרכז מד הזווית נצמד זמנית לקודקוד. אפשר לנעול אותו.";
+      return i18n.t(
+        "measure.centerTemporarilySnapped"
+      );
     }
 
     if (
       changeType ===
       "baseline-snapped"
     ) {
-      return "קו ה־0° נצמד זמנית לקרן הראשונה. אפשר לנעול אותו.";
+      return i18n.t(
+        "measure.baselineTemporarilySnapped"
+      );
     }
 
     return this.getAlignmentFeedback();
@@ -1204,7 +1259,9 @@ class MeasureAngleActivity
 
     if (!alignment.centerAligned) {
       this.showFeedback(
-        "מקם את מרכז מד הזווית על קודקוד הזווית."
+        i18n.t(
+          "measure.positionCenter"
+        )
       );
       this.appContext.lessonState
         .markIncomplete(
@@ -1215,7 +1272,9 @@ class MeasureAngleActivity
 
     if (!alignment.baselineAligned) {
       this.showFeedback(
-        "יישר את קו ה־0° עם הקרן הראשונה."
+        i18n.t(
+          "measure.alignFirstRay"
+        )
       );
       this.appContext.lessonState
         .markIncomplete(
@@ -1231,7 +1290,9 @@ class MeasureAngleActivity
 
     if (studentValue === null) {
       this.showFeedback(
-        "כתוב את גודל הזווית במעלות שלמות."
+        i18n.t(
+          "measure.enterAnswer"
+        )
       );
       this.appContext.lessonState
         .markIncomplete(
@@ -1254,7 +1315,9 @@ class MeasureAngleActivity
 
     if (!isValid) {
       this.showFeedback(
-        "בדוק מאיזו סקלה צריך להתחיל לקרוא והזן את המידה השלמה."
+        i18n.t(
+          "measure.wrongScale"
+        )
       );
       this.appContext.lessonState
         .markIncomplete(
@@ -1264,7 +1327,9 @@ class MeasureAngleActivity
     }
 
     this.showFeedback(
-      "המדידה נכונה."
+      i18n.t(
+        "measure.correct"
+      )
     );
     this.appContext.lessonState
       .markCompleted(

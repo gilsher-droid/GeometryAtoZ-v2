@@ -1,43 +1,64 @@
-const lesson01 = {
+function createLesson01() {
+  return {
   id: "lesson-01",
 
-  title: "הכניסה לעולם הגיאומטריה",
+  title:
+    i18n.t("lesson.title"),
 
   subtitle:
-    "מנקודה לזווית — ואיך בונים טענה וצידוק",
+    i18n.t("lesson.subtitle"),
 
   thinkingKey:
-    "גיאומטריה מתחילה מהגדרות.",
+    i18n.t("lesson.thinkingKey"),
 
   steps: [
     {
       id: "welcome",
       type: "welcome",
       title:
-        "ברוכים הבאים לעולם הגיאומטריה",
+        i18n.t(
+          "lesson.welcome.title"
+        ),
       text:
-        "המסע שלנו מתחיל בשאלה פשוטה: ממה בנויה הגיאומטריה?",
-      actionLabel: "מתחילים"
+        i18n.t(
+          "lesson.welcome.text"
+        ),
+      actionLabel:
+        i18n.t("welcome.start")
     },
 
     {
       id: "shapes-question",
       type: "question",
-      title: "מה משותף לכל הצורות?",
+      title:
+        i18n.t(
+          "lesson.shapes.title"
+        ),
       text:
-        "התבונן בריבוע, במלבן, במשולש, בטרפז ובמשושה. מה לדעתך משותף לכולן?",
+        i18n.t(
+          "lesson.shapes.text"
+        ),
       prompt:
-        "כתוב או אמור את ההשערה שלך."
+        i18n.t(
+          "lesson.shapes.prompt"
+        )
     },
 
     {
       id: "point",
       type: "construction",
-      title: "נקודה",
+      title:
+        i18n.t(
+          "lesson.point.title"
+        ),
       text:
-        "לחץ במקום כלשהו כדי ליצור נקודה.",
+        i18n.t(
+          "lesson.point.text"
+        ),
       instruction:
-        "לחץ בתוך המשטח כדי ליצור נקודה.",
+        i18n.t(
+          "lesson.point.instruction"
+        ),
       pointLabel: "A",
       canvasWidth: 640,
       canvasHeight: 360
@@ -46,11 +67,14 @@ const lesson01 = {
 {
   id: "ray",
   type: "ray-construction",
-  title: "קרן",
+  title:
+    i18n.t("lesson.ray.title"),
   text:
-    "קרן מתחילה בנקודה וממשיכה ללא סוף בכיוון אחד.",
+    i18n.t("lesson.ray.text"),
   instruction:
-    "התחל מהנקודה A וגרור לכיוון כלשהו כדי ליצור קרן.",
+    i18n.t(
+      "lesson.ray.instruction"
+    ),
   originPointId: "point-A",
   rayId: "ray-1",
   rayLabel: "",
@@ -61,11 +85,14 @@ const lesson01 = {
 {
   id: "angle",
   type: "angle-construction",
-  title: "נוצרת זווית",
+  title:
+    i18n.t("lesson.angle.title"),
   text:
-    "שתי קרניים היוצאות מאותה נקודה יוצרות זווית.",
+    i18n.t("lesson.angle.text"),
   instruction:
-    "גרור מהנקודה A בכיוון חדש כדי ליצור קרן שנייה.",
+    i18n.t(
+      "lesson.angle.instruction"
+    ),
   originPointId: "point-A",
   firstRayId: "ray-1",
   secondRayId: "ray-2",
@@ -81,21 +108,31 @@ const lesson01 = {
 {
   id: "identify-parts",
   type: "question",
-  title: "מהם חלקי הזווית?",
+  title:
+    i18n.t("lesson.parts.title"),
   text:
-    "התבונן בזווית שיצרת. זהה את הקודקוד, את שתי הקרניים ואת האזור שביניהן.",
+    i18n.t("lesson.parts.text"),
   prompt:
-    "כתוב מהו הקודקוד, מהן שתי הקרניים וכיצד הן יוצרות זווית."
+    i18n.t(
+      "lesson.parts.prompt"
+    )
 },
 
 {
   id: "measure-angle",
   type: "measure-angle",
-  title: "מודדים זווית",
+  title:
+    i18n.t(
+      "lesson.measure.title"
+    ),
   text:
-    "השתמש במד הזווית כדי למדוד את הזווית שיצרת.",
+    i18n.t(
+      "lesson.measure.text"
+    ),
   instruction:
-    "מקם את מרכז מד הזווית על הקודקוד, יישר את קו ה־0° עם הקרן הראשונה וקרא את המידה.",
+    i18n.t(
+      "lesson.measure.instruction"
+    ),
   vertexPointId: "point-A",
   baselineRayId: "ray-1",
   firstRayId: "ray-1",
@@ -116,40 +153,69 @@ const lesson01 = {
     {
       id: "classify-angle",
       type: "claim-justification",
-      title: "איזה סוג זווית זו?",
+      title:
+        i18n.t(
+          "lesson.classify.title"
+        ),
       text:
-        "בחר את סוג הזווית ובנה טענה מתאימה.",
+        i18n.t(
+          "lesson.classify.text"
+        ),
       claimPrompt:
-        "הטענה שלי היא:",
+        i18n.t(
+          "lesson.classify.claim"
+        ),
       justificationPrompt:
-        "הצידוק שלי הוא:"
+        i18n.t(
+          "lesson.classify.justification"
+        )
     },
 
     {
       id: "thinking-key",
       type: "thinking-key",
-      title: "מפתח החשיבה הראשון",
+      title:
+        i18n.t(
+          "lesson.key.title"
+        ),
       text:
-        "גיאומטריה מתחילה מהגדרות.",
+        i18n.t(
+          "lesson.thinkingKey"
+        ),
       reflection:
-        "למה חשוב להגדיר מושגים לפני שמתחילים להוכיח טענות?"
+        i18n.t(
+          "lesson.key.reflection"
+        )
     },
 
     {
       id: "summary",
       type: "summary",
-      title: "מה למדנו?",
+      title:
+        i18n.t(
+          "lesson.summary.title"
+        ),
       concepts: [
-        "נקודה",
-        "קרן",
-        "קודקוד",
-        "זווית",
-        "מדידת זווית",
-        "טענה",
-        "צידוק"
+        i18n.t("concept.point"),
+        i18n.t("concept.ray"),
+        i18n.t("concept.vertex"),
+        i18n.t("concept.angle"),
+        i18n.t(
+          "concept.measurement"
+        ),
+        i18n.t("concept.claim"),
+        i18n.t(
+          "concept.justification"
+        )
       ]
     }
   ]
-};
+  };
+}
+
+let lesson01 =
+  createLesson01();
 
 window.lesson01 = lesson01;
+window.createLesson01 =
+  createLesson01;

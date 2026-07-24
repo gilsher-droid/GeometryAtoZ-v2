@@ -33,6 +33,14 @@ body {
   line-height: 1.6;
 }
 
+html[lang="en"] body {
+  font-family:
+    "Montserrat",
+    "Manrope",
+    Arial,
+    sans-serif;
+}
+
 button,
 textarea,
 input {
@@ -130,6 +138,49 @@ button,
   margin: 0;
   color: var(--muted);
   font-size: 0.95rem;
+}
+
+.header-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.language-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+}
+
+.language-option {
+  width: auto;
+  min-width: 0;
+  padding: 7px 11px;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  font-size: 0.88rem;
+}
+
+.language-option:hover:not(:disabled) {
+  background: var(--surface-soft);
+  color: var(--primary);
+  transform: none;
+}
+
+.language-option.is-active {
+  background: var(--primary);
+  color: white;
+}
+
+.language-option.is-active:hover:not(:disabled) {
+  background: var(--primary);
+  color: white;
 }
 
 .fundamatics-home-link {
@@ -360,6 +411,10 @@ button:disabled {
   .fundamatics-home-link {
     align-self: flex-start;
   }
+
+  .header-actions {
+    justify-content: space-between;
+  }
 }
 
 @media (max-width: 650px) {
@@ -400,6 +455,19 @@ button:disabled {
   .fundamatics-home-link {
     align-self: stretch;
     text-align: center;
+  }
+
+  .header-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .language-switcher {
+    align-self: flex-start;
+  }
+
+  .language-option {
+    width: auto;
   }
 
   .step-content {
