@@ -40,11 +40,16 @@ class ClaimJustificationActivity
           `response-${this.activityId}-claim`,
         label:
           this.step.claimPrompt ||
-          "מהי הטענה שלך?",
+          i18n.t(
+            "claim.prompt"
+          ),
         placeholder:
-          "כתוב כאן את הטענה שלך...",
+          i18n.t(
+            "claim.placeholder"
+          ),
         value: claimValue,
-        buttonText: "שמור טענה",
+        buttonText:
+          i18n.t("claim.save"),
 
         onSave: (value) => {
           lessonState.updateActivityData(
@@ -64,11 +69,18 @@ class ClaimJustificationActivity
         label:
           this.step
             .justificationPrompt ||
-          "כיצד אפשר להצדיק את הטענה?",
+          i18n.t(
+            "justification.prompt"
+          ),
         placeholder:
-          "כתוב כאן את הצידוק שלך...",
+          i18n.t(
+            "justification.placeholder"
+          ),
         value: justificationValue,
-        buttonText: "שמור צידוק",
+        buttonText:
+          i18n.t(
+            "justification.save"
+          ),
 
         onSave: (value) => {
           lessonState.updateActivityData(
@@ -104,7 +116,9 @@ class ClaimJustificationActivity
             ? `
               <div class="reflection-box">
                 <strong>
-                  שאלה למחשבה:
+                  ${i18n.t(
+                    "app.reflection"
+                  )}
                 </strong>
 
                 <p>

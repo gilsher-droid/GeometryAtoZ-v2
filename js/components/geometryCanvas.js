@@ -54,7 +54,9 @@ class GeometryCanvas {
         class="geometry-canvas ${this.className}"
         role="application"
         tabindex="0"
-        aria-label="משטח גיאומטרי אינטראקטיבי"
+        aria-label="${i18n.t(
+          "canvas.aria"
+        )}"
         style="
           position: relative;
           width: 100%;
@@ -1072,7 +1074,9 @@ class GeometryCanvas {
       this.protractorState.id;
     svg.setAttribute(
       "aria-label",
-      "מד זווית אינטראקטיבי"
+      i18n.t(
+        "canvas.protractorAria"
+      )
     );
     svg.setAttribute(
       "role",

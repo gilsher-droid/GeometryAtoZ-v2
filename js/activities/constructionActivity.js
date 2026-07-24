@@ -43,7 +43,9 @@ class ConstructionActivity extends BaseActivity {
 
     const instruction =
       this.step.instruction ||
-      "לחץ בתוך המשטח כדי ליצור נקודה.";
+      i18n.t(
+        "lesson.point.instruction"
+      );
 
     const hasPoint =
       this.workspace
@@ -66,8 +68,12 @@ class ConstructionActivity extends BaseActivity {
         >
           ${
             hasPoint
-              ? "יצרת נקודה. עכשיו אפשר להמשיך."
-              : "עדיין לא נוצרה נקודה."
+              ? i18n.t(
+                  "construction.point.created"
+                )
+              : i18n.t(
+                  "construction.point.missing"
+                )
           }
         </p>
 
@@ -121,7 +127,9 @@ class ConstructionActivity extends BaseActivity {
 
     if (this.feedbackElement) {
       this.feedbackElement.textContent =
-        "יצרת נקודה. עכשיו אפשר להמשיך.";
+        i18n.t(
+          "construction.point.created"
+        );
     }
   }
 

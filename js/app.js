@@ -6,6 +6,104 @@ document.addEventListener(
         "lesson-container"
       );
 
+    let isCompletionScreen =
+      false;
+
+    function updatePageChrome() {
+      const appHeader =
+        document.getElementById(
+          "app-header"
+        );
+      const productSubtitle =
+        document.getElementById(
+          "product-subtitle"
+        );
+      const homeLink =
+        document.getElementById(
+          "fundamatics-home-link"
+        );
+      const welcomeTitle =
+        document.getElementById(
+          "welcome-title"
+        );
+      const welcomeText =
+        document.getElementById(
+          "welcome-text"
+        );
+      const startButton =
+        document.getElementById(
+          "start-button"
+        );
+      const languageSwitcher =
+        document.querySelector(
+          ".language-switcher"
+        );
+
+      if (appHeader) {
+        appHeader.setAttribute(
+          "aria-label",
+          i18n.t("header.aria")
+        );
+      }
+
+      if (productSubtitle) {
+        productSubtitle.textContent =
+          i18n.t(
+            "header.subtitle"
+          );
+      }
+
+      if (homeLink) {
+        homeLink.textContent =
+          i18n.t("header.home");
+      }
+
+      if (welcomeTitle) {
+        welcomeTitle.textContent =
+          i18n.t("welcome.title");
+      }
+
+      if (welcomeText) {
+        welcomeText.textContent =
+          i18n.t("welcome.text");
+      }
+
+      if (startButton) {
+        startButton.textContent =
+          i18n.t("welcome.start");
+      }
+
+      if (languageSwitcher) {
+        languageSwitcher.setAttribute(
+          "aria-label",
+          i18n.t(
+            "language.label"
+          )
+        );
+      }
+
+      document
+        .querySelectorAll(
+          ".language-option"
+        )
+        .forEach((button) => {
+          const isActive =
+            button.dataset.locale ===
+            i18n.locale;
+
+          button.classList.toggle(
+            "is-active",
+            isActive
+          );
+          button.setAttribute(
+            "aria-pressed",
+            String(isActive)
+          );
+        });
+    }
+
+    updatePageChrome();
+
     lessonEngine.loadLesson(
       lesson01
     );
@@ -107,6 +205,9 @@ document.addEventListener(
       createActivityRenderer();
 
     function renderStep() {
+      isCompletionScreen =
+        false;
+
       const step =
         lessonEngine.getCurrentStep();
 
@@ -114,7 +215,9 @@ document.addEventListener(
         lessonContainer.innerHTML = `
           <section class="lesson-step">
             <h2>
-              לא נמצא שלב להצגה
+              ${i18n.t(
+                "app.noStep"
+              )}
             </h2>
           </section>
         `;
@@ -151,7 +254,12 @@ document.addEventListener(
 
           <div class="progress-wrapper">
             <div class="progress-label">
-              התקדמות: ${progress}%
+              ${i18n.t(
+                "app.progress",
+                {
+                  progress
+                }
+              )}
             </div>
 
             <div class="progress-track">
@@ -164,11 +272,18 @@ document.addEventListener(
 
           <div class="step-content">
             <p class="step-number">
-              שלב ${
-                lessonEngine
-                  .currentStepIndex + 1
-              }
-              מתוך ${lesson01.steps.length}
+              ${i18n.t(
+                "app.step",
+                {
+                  current:
+                    lessonEngine
+                      .currentStepIndex +
+                    1,
+                  total:
+                    lesson01.steps
+                      .length
+                }
+              )}
             </p>
 
             <h2>
@@ -189,7 +304,9 @@ document.addEventListener(
                 ? `
                   <div class="reflection-box">
                     <strong>
-                      שאלה למחשבה:
+                      ${i18n.t(
+                        "app.reflection"
+                      )}
                     </strong>
 
                     <p>
@@ -227,7 +344,9 @@ document.addEventListener(
                   : ""
               }
             >
-              הקודם
+              ${i18n.t(
+                "app.previous"
+              )}
             </button>
 
             <button
@@ -237,8 +356,12 @@ document.addEventListener(
               ${
                 lessonEngine
                   .isLastStep()
-                  ? "סיום"
-                  : "הבא"
+                  ? i18n.t(
+                      "app.finish"
+                    )
+                  : i18n.t(
+                      "app.next"
+                    )
               }
             </button>
           </div>
@@ -315,7 +438,9 @@ document.addEventListener(
               !activityRenderer.validate()
             ) {
               alert(
-                "כדי להמשיך, יש להשלים את הפעילות."
+                i18n.t(
+                  "app.incomplete"
+                )
               );
 
               if (
@@ -358,17 +483,24 @@ document.addEventListener(
     }
 
     function renderCompletionScreen() {
+      isCompletionScreen =
+        true;
+
       activityRenderer
         .destroyCurrentActivity();
 
       lessonContainer.innerHTML = `
         <section class="lesson-complete">
           <h2>
-            סיימת את השיעור הראשון
+            ${i18n.t(
+              "app.completeTitle"
+            )}
           </h2>
 
           <p>
-            בנית את מפתח החשיבה הראשון:
+            ${i18n.t(
+              "app.completeText"
+            )}
             <strong>
               ${lesson01.thinkingKey}
             </strong>
@@ -378,7 +510,9 @@ document.addEventListener(
             id="restart-button"
             type="button"
           >
-            להתחיל מחדש
+            ${i18n.t(
+              "app.restart"
+            )}
           </button>
         </section>
       `;
@@ -428,6 +562,78 @@ document.addEventListener(
         }
       );
     }
+
+    document
+      .querySelectorAll(
+        ".language-option"
+      )
+      .forEach((button) => {
+        button.addEventListener(
+          "click",
+          () => {
+            const nextLocale =
+              button.dataset.locale;
+
+            if (
+              nextLocale ===
+              i18n.locale
+            ) {
+              return;
+            }
+
+            const currentActivity =
+              activityRenderer
+                .getCurrentActivity();
+
+            if (
+              currentActivity &&
+              typeof currentActivity
+                .save === "function"
+            ) {
+              currentActivity.save();
+            }
+
+            i18n.setLocale(
+              nextLocale
+            );
+          }
+        );
+      });
+
+    window.addEventListener(
+      "geometryatoz:localechange",
+      () => {
+        const currentStepIndex =
+          lessonEngine
+            .currentStepIndex;
+
+        activityRenderer
+          .destroyCurrentActivity();
+
+        lesson01 =
+          createLesson01();
+        window.lesson01 =
+          lesson01;
+
+        lessonEngine.loadLesson(
+          lesson01
+        );
+        lessonEngine
+          .currentStepIndex =
+          Math.min(
+            currentStepIndex,
+            lesson01.steps.length - 1
+          );
+
+        updatePageChrome();
+
+        if (isCompletionScreen) {
+          renderCompletionScreen();
+        } else {
+          renderStep();
+        }
+      }
+    );
 
     renderStep();
   }

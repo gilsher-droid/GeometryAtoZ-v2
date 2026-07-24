@@ -74,7 +74,9 @@ class RayConstructionActivity
 
     const instruction =
       this.step.instruction ||
-      "גרור מהנקודה A לכיוון כלשהו כדי ליצור קרן.";
+      i18n.t(
+        "lesson.ray.instruction"
+      );
 
     return `
       <div
@@ -90,7 +92,9 @@ class RayConstructionActivity
             ? ""
             : `
               <p class="interaction-feedback">
-                לא נמצאה נקודת המוצא. חזור לשלב הקודם וצור נקודה.
+                ${i18n.t(
+                  "construction.originMissing"
+                )}
               </p>
             `
         }
@@ -104,8 +108,12 @@ class RayConstructionActivity
         >
           ${
             hasRay
-              ? "יצרת קרן. עכשיו אפשר להמשיך."
-              : "עדיין לא נוצרה קרן."
+              ? i18n.t(
+                  "construction.ray.created"
+                )
+              : i18n.t(
+                  "construction.ray.missing"
+                )
           }
         </p>
       </div>
@@ -184,7 +192,9 @@ class RayConstructionActivity
       this.feedbackElement
     ) {
       this.feedbackElement.textContent =
-        "יצרת קרן. עכשיו אפשר להמשיך.";
+        i18n.t(
+          "construction.ray.created"
+        );
     }
   }
 

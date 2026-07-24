@@ -2,9 +2,13 @@ class ResponseBox {
   constructor({
     id,
     label,
-    placeholder = "כתוב כאן...",
+    placeholder =
+      i18n.t(
+        "response.defaultPlaceholder"
+      ),
     value = "",
-    buttonText = "שמור תשובה",
+    buttonText =
+      i18n.t("response.save"),
     showSaveButton = true,
     onSave = () => {},
     onChange = () => {}
@@ -52,7 +56,9 @@ class ResponseBox {
                 >
                   ${
                     isSaved
-                      ? "✓ התשובה נשמרה"
+                      ? i18n.t(
+                          "response.savedButton"
+                        )
                       : this.buttonText
                   }
                 </button>
@@ -63,7 +69,9 @@ class ResponseBox {
                 >
                   ${
                     isSaved
-                      ? "התשובה נשמרה."
+                      ? i18n.t(
+                          "response.saved"
+                        )
                       : ""
                   }
                 </span>
@@ -119,7 +127,9 @@ class ResponseBox {
 
         if (!this.showSaveButton) {
           status.textContent =
-            "נשמר אוטומטית";
+            i18n.t(
+              "response.autoSaved"
+            );
 
           return;
         }
@@ -135,7 +145,9 @@ class ResponseBox {
             this.buttonText;
 
           status.textContent =
-            "יש שינויים שעדיין לא נשמרו.";
+            i18n.t(
+              "response.unsaved"
+            );
         }
       }
     );
@@ -154,7 +166,9 @@ class ResponseBox {
 
         if (!value) {
           status.textContent =
-            "כתוב תשובה לפני השמירה.";
+            i18n.t(
+              "response.empty"
+            );
 
           textarea.focus();
 
@@ -171,10 +185,14 @@ class ResponseBox {
           true;
 
         button.textContent =
-          "✓ התשובה נשמרה";
+          i18n.t(
+            "response.savedButton"
+          );
 
         status.textContent =
-          "התשובה נשמרה.";
+          i18n.t(
+            "response.saved"
+          );
 
         this.onSave(
           value

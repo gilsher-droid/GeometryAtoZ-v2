@@ -38,7 +38,9 @@ class QuestionActivity
       this.step.question ||
       this.step.prompt ||
       this.step.responsePrompt ||
-      "כתוב את התשובה שלך.";
+      i18n.t(
+        "response.defaultLabel"
+      );
 
     this.responseBox =
       new ResponseBox({
@@ -51,7 +53,9 @@ class QuestionActivity
         placeholder:
           this.step.answerPlaceholder ||
           this.step.placeholder ||
-          "כתוב כאן את התשובה שלך...",
+          i18n.t(
+            "response.answerPlaceholder"
+          ),
 
         value:
           savedValue,
@@ -84,7 +88,9 @@ class QuestionActivity
         data-activity-type="question"
       >
         <strong>
-          שאלת חשיבה:
+          ${i18n.t(
+            "question.thinking"
+          )}
         </strong>
 
         ${this.responseBox.render()}

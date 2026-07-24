@@ -101,7 +101,9 @@ class AngleConstructionActivity
 
     const instruction =
       this.step.instruction ||
-      "גרור מהנקודה A בכיוון חדש כדי ליצור קרן שנייה.";
+      i18n.t(
+        "lesson.angle.instruction"
+      );
 
     return `
       <div
@@ -116,7 +118,9 @@ class AngleConstructionActivity
           !originPoint
             ? `
               <p class="interaction-feedback">
-                לא נמצאה נקודת המוצא. חזור לשלב הנקודה.
+                ${i18n.t(
+                  "construction.pointStepMissing"
+                )}
               </p>
             `
             : ""
@@ -126,7 +130,9 @@ class AngleConstructionActivity
           !firstRay
             ? `
               <p class="interaction-feedback">
-                לא נמצאה הקרן הראשונה. חזור לשלב הקרן.
+                ${i18n.t(
+                  "construction.firstRayMissing"
+                )}
               </p>
             `
             : ""
@@ -213,7 +219,15 @@ class AngleConstructionActivity
     if (!quantizedRayEnd) {
       if (this.feedbackElement) {
         this.feedbackElement.textContent =
-          `בחר זווית בין ${this.getMinimumConstructedAngle()}° ל־${this.getMaximumConstructedAngle()}°.`;
+          i18n.t(
+            "construction.angleRange",
+            {
+              minimum:
+                this.getMinimumConstructedAngle(),
+              maximum:
+                this.getMaximumConstructedAngle()
+            }
+          );
       }
 
       return;
@@ -424,7 +438,9 @@ class AngleConstructionActivity
   getFeedbackText(angle) {
     if (!angle) {
       return (
-        "עדיין לא נוצרה זווית. צור קרן שנייה מאותה נקודה."
+        i18n.t(
+          "construction.angleMissing"
+        )
       );
     }
 
@@ -434,7 +450,13 @@ class AngleConstructionActivity
       );
 
     return (
-      `נוצרה זווית בגודל משוער של ${roundedDegrees}°.`
+      i18n.t(
+        "construction.angleCreated",
+        {
+          degrees:
+            roundedDegrees
+        }
+      )
     );
   }
 
