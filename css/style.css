@@ -1,14 +1,20 @@
 :root {
-  --background: #f4f7fb;
+  --background: #f7f8fb;
   --surface: #ffffff;
-  --surface-soft: #eef4fb;
-  --text: #1f2937;
-  --muted: #64748b;
-  --primary: #0f4c81;
-  --primary-light: #2f80c9;
-  --border: #d8e2ec;
+  --surface-soft: #f1f5fb;
+  --brand-cream: #fffde1;
+  --brand-yellow: #fff1a8;
+  --brand-purple: #6e56cf;
+  --brand-purple-dark: #5842b8;
+  --brand-red: #c94b54;
+  --text: #23262b;
+  --muted: #5f6b7a;
+  --primary: #0b3a8a;
+  --primary-light: #245cb1;
+  --border: #d5deeb;
   --success: #15803d;
-  --shadow: 0 12px 30px rgba(15, 76, 129, 0.12);
+  --shadow: 0 16px 36px rgba(11, 58, 138, 0.1);
+  --brand-shadow: 0 7px 0 var(--primary);
 }
 
 * {
@@ -17,7 +23,11 @@
 
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family:
+    "Noto Sans Hebrew",
+    "Montserrat",
+    Arial,
+    sans-serif;
   background: var(--background);
   color: var(--text);
   line-height: 1.6;
@@ -29,37 +39,134 @@ input {
   font: inherit;
 }
 
+button,
+.fundamatics-home-link {
+  font-family:
+    "Manrope",
+    "Noto Sans Hebrew",
+    Arial,
+    sans-serif;
+}
+
 #app {
-  width: min(1100px, calc(100% - 32px));
-  margin: 32px auto;
+  width: min(1160px, calc(100% - 32px));
+  margin: 22px auto 36px;
 }
 
 .app-header {
-  margin-bottom: 24px;
-  padding: 28px;
-  border-radius: 24px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 30px;
+  padding: 16px 18px;
+  border: 2px solid var(--primary);
+  border-radius: 22px;
+  background: var(--brand-cream);
+  color: var(--text);
+  box-shadow:
+    var(--brand-shadow),
+    var(--shadow);
+}
+
+.brand-product-lockup {
+  display: flex;
+  flex: 1 1 560px;
+  align-items: center;
+  gap: 18px;
+  min-width: 0;
+}
+
+.fundamatics-brand {
+  display: flex;
+  width: min(230px, 42vw);
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 18px 7px;
+  border-radius: 999px;
+  background: var(--primary);
   color: white;
-  box-shadow: var(--shadow);
+  text-decoration: none;
+}
+
+.fundamatics-brand img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.brand-tagline {
+  color: var(--brand-yellow);
+  font-family: cursive;
+  font-size: 0.92rem;
+  font-style: italic;
+  line-height: 1.15;
+}
+
+.brand-divider {
+  color: var(--primary);
+  font-family: "Montserrat", Arial, sans-serif;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.product-identity {
+  min-width: 0;
 }
 
 .app-header h1 {
-  margin: 0 0 8px;
-  font-size: clamp(2rem, 5vw, 3.4rem);
+  margin: 0 0 2px;
+  color: var(--primary);
+  font-family: "Montserrat", Arial, sans-serif;
+  font-size: clamp(1.3rem, 3vw, 2rem);
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .app-header p {
   margin: 0;
-  font-size: 1.05rem;
-  opacity: 0.95;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.fundamatics-home-link {
+  flex: 0 0 auto;
+  padding: 10px 18px;
+  border: 2px solid var(--brand-purple);
+  border-radius: 999px;
+  color: var(--brand-purple-dark);
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.fundamatics-home-link:hover {
+  background: var(--brand-purple);
+  color: white;
+  transform: translateY(-2px);
+}
+
+.fundamatics-brand:focus-visible,
+.fundamatics-home-link:focus-visible,
+button:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(110, 86, 207, 0.35);
+  outline-offset: 3px;
 }
 
 .lesson-step,
 .lesson-complete,
 .welcome-screen {
-  padding: 28px;
+  padding: 30px;
   border: 1px solid var(--border);
-  border-radius: 24px;
+  border-radius: 26px;
   background: var(--surface);
   box-shadow: var(--shadow);
 }
@@ -78,13 +185,17 @@ input {
   height: 12px;
   overflow: hidden;
   border-radius: 999px;
-  background: #dfe8f2;
+  background: #e5ebf4;
 }
 
 .progress-bar {
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, var(--primary), var(--primary-light));
+  background: linear-gradient(
+    90deg,
+    var(--primary),
+    var(--brand-purple)
+  );
   transition: width 0.3s ease;
 }
 
@@ -102,7 +213,9 @@ input {
 .lesson-complete h2 {
   margin-top: 0;
   color: var(--primary);
+  font-family: "Montserrat", Arial, sans-serif;
   font-size: clamp(1.7rem, 4vw, 2.5rem);
+  font-weight: 800;
 }
 
 .teacher-prompt,
@@ -113,7 +226,7 @@ input {
   padding: 18px;
   border: 1px solid var(--border);
   border-radius: 18px;
-  background: var(--surface-soft);
+  background: var(--brand-cream);
 }
 
 .claim-box label,
@@ -127,15 +240,14 @@ textarea {
   width: 100%;
   resize: vertical;
   padding: 14px;
-  border: 1px solid #b8c7d6;
-  border-radius: 12px;
+  border: 1px solid #b7c4d6;
+  border-radius: 14px;
   background: white;
   color: var(--text);
 }
 
 textarea:focus {
-  outline: 3px solid rgba(47, 128, 201, 0.18);
-  border-color: var(--primary-light);
+  border-color: var(--brand-purple);
 }
 
 .interaction-area {
@@ -151,12 +263,12 @@ textarea:focus {
   min-height: 300px;
   margin-top: 12px;
   overflow: hidden;
-  border: 2px dashed #8ca4ba;
+  border: 2px dashed #8aa1c2;
   border-radius: 20px;
   background:
-    linear-gradient(rgba(15, 76, 129, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 76, 129, 0.04) 1px, transparent 1px),
-    #fbfdff;
+    linear-gradient(rgba(11, 58, 138, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(11, 58, 138, 0.05) 1px, transparent 1px),
+    #fffef3;
   background-size: 24px 24px;
   cursor: crosshair;
 }
@@ -168,7 +280,7 @@ textarea:focus {
   border: 4px solid white;
   border-radius: 50%;
   background: var(--primary);
-  box-shadow: 0 4px 12px rgba(15, 76, 129, 0.35);
+  box-shadow: 0 4px 12px rgba(11, 58, 138, 0.3);
   transform: translate(-50%, -50%);
 }
 
@@ -205,9 +317,9 @@ textarea:focus {
 button {
   min-width: 120px;
   padding: 12px 22px;
-  border: none;
-  border-radius: 12px;
-  background: var(--primary);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--brand-purple);
   color: white;
   font-weight: 700;
   cursor: pointer;
@@ -219,7 +331,7 @@ button {
 
 button:hover:not(:disabled) {
   transform: translateY(-2px);
-  background: var(--primary-light);
+  background: var(--brand-purple-dark);
 }
 
 button:disabled {
@@ -235,18 +347,59 @@ button:disabled {
   color: var(--primary);
 }
 
-@media (max-width: 650px) {
-  #app {
-    width: min(100% - 20px, 1100px);
-    margin: 12px auto;
+@media (max-width: 850px) {
+  .app-header {
+    align-items: stretch;
+    flex-direction: column;
   }
 
-  .app-header,
+  .brand-product-lockup {
+    flex-basis: auto;
+  }
+
+  .fundamatics-home-link {
+    align-self: flex-start;
+  }
+}
+
+@media (max-width: 650px) {
+  #app {
+    width: min(100% - 16px, 1160px);
+    margin: 10px auto 24px;
+  }
+
   .lesson-step,
   .lesson-complete,
   .welcome-screen {
     padding: 20px;
     border-radius: 18px;
+  }
+
+  .app-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .brand-product-lockup {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .fundamatics-brand {
+    width: min(220px, 100%);
+  }
+
+  .brand-divider {
+    display: none;
+  }
+
+  .fundamatics-home-link {
+    align-self: stretch;
+    text-align: center;
   }
 
   .step-content {
@@ -282,7 +435,7 @@ button:disabled {
 }
 .geometry-ray {
   height: 4px;
-  background: #0c4a6e;
+  background: var(--primary);
   border-radius: 999px;
   pointer-events: none;
 }
@@ -292,7 +445,7 @@ button:disabled {
 }
 
 .geometry-ray-arrow {
-  color: #0c4a6e;
+  color: var(--primary);
   font-size: 18px;
   line-height: 1;
   pointer-events: none;
@@ -306,13 +459,13 @@ button:disabled {
 }
 .geometry-angle-arc {
   fill: none;
-  stroke: #f59e0b;
+  stroke: var(--brand-red);
   stroke-width: 4;
   stroke-linecap: round;
 }
 
 .geometry-angle-label {
-  fill: #92400e;
+  fill: var(--brand-red);
   font-size: 16px;
   font-weight: 700;
   font-family: "Heebo", Arial, sans-serif;
@@ -320,12 +473,12 @@ button:disabled {
 
 .measure-angle-canvas {
   margin-top: 12px;
-  border: 2px dashed #8ca4ba;
+  border: 2px dashed #8aa1c2;
   border-radius: 20px;
   background:
-    linear-gradient(rgba(15, 76, 129, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 76, 129, 0.04) 1px, transparent 1px),
-    #fbfdff;
+    linear-gradient(rgba(11, 58, 138, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(11, 58, 138, 0.05) 1px, transparent 1px),
+    #fffef3;
   background-size: 24px 24px;
   cursor: default;
 }
@@ -515,10 +668,10 @@ button:disabled {
   max-width: 100%;
   min-height: 44px;
   padding: 10px 14px;
-  border: 1px solid #cbd5e1;
-  border-radius: 10px;
-  background: #f8fafc;
-  color: #334155;
+  border: 1px solid #a8b8cf;
+  border-radius: 999px;
+  background: var(--brand-cream);
+  color: var(--primary);
   font-weight: 600;
   text-align: start;
 }
@@ -536,22 +689,21 @@ button:disabled {
 }
 
 .learning-moment-button:hover:not(:disabled) {
-  border-color: #9bb8d1;
-  background: #eef6fc;
+  border-color: var(--brand-purple);
+  background: #f4f0ff;
   color: var(--primary);
   transform: none;
 }
 
 .learning-moment-button:focus-visible {
-  outline: 3px solid rgba(47, 128, 201, 0.3);
-  outline-offset: 4px;
+  outline-color: rgba(110, 86, 207, 0.35);
 }
 
 .learning-moment-content {
   margin-top: 10px;
   padding: 14px;
-  border-inline-start: 3px solid var(--border);
-  background: #f8fafc;
+  border-inline-start: 3px solid var(--brand-purple);
+  background: var(--brand-cream);
 }
 
 .learning-moment-media {
@@ -565,7 +717,7 @@ button:disabled {
   max-width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 18px;
   background: #111827;
 }
 
@@ -597,7 +749,7 @@ button:disabled {
   padding: 10px 16px;
   background: #eaf3fb;
   color: var(--primary);
-  border: 1px solid #b8c7d6;
+  border: 1px solid #aebed2;
 }
 
 .protractor-lock-button:hover:not(:disabled) {
@@ -632,8 +784,8 @@ button:disabled {
   width: min(220px, 100%);
   min-width: 0;
   padding: 12px 34px 12px 14px;
-  border: 1px solid #b8c7d6;
-  border-radius: 12px;
+  border: 1px solid #aebed2;
+  border-radius: 14px;
   background: white;
   color: var(--text);
   direction: ltr;
@@ -652,8 +804,7 @@ button:disabled {
 }
 
 .measure-angle-input input:focus {
-  outline: 3px solid rgba(47, 128, 201, 0.18);
-  border-color: var(--primary-light);
+  border-color: var(--brand-purple);
 }
 
 .measure-angle-feedback {
@@ -679,5 +830,18 @@ button:disabled {
   .measure-angle-input,
   .measure-angle-input input {
     width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .progress-bar,
+  button,
+  .fundamatics-home-link {
+    transition: none;
+  }
+
+  button:hover:not(:disabled),
+  .fundamatics-home-link:hover {
+    transform: none;
   }
 }
