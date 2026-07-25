@@ -293,11 +293,11 @@ const messages = {
     "measure.visualDescriptionLabel":
       "תיאור חזותי:",
     "measure.visualDescription":
-      "גיל פותח את המצלמה, מחזיק מד זווית שקוף מול פניו ומקרב אותו למצלמה כדי שיוני יוכל לראות את צורתו ואת הסימונים שעליו.",
+      "גיל פותח את המצלמה, מחזיק מד זווית שקוף מול פניו ומקרב אותו למצלמה כדי שהתלמיד יוכל לראות את צורתו ואת הסימונים שעליו.",
     "measure.transcriptLabel":
       "תמלול:",
     "measure.transcript":
-      "יוני: \"אה, מכשיר לא, בחיים לא ראיתי.\" גיל: \"וואלה.\" יוני: \"כן.\" גיל: \"עכשיו הכרחת אותי לפתוח את המצלמה, יוני. רק רגע, ידידי היקר, כי לא יכול להיות שאתה לא תכיר את הדבר הזה. רואה את זה? יוני?\" יוני: \"כן.\" גיל: \"זה נקרא מד זווית.\"",
+      "התלמיד: \"אה, מכשיר? לא, בחיים לא ראיתי.\" גיל: \"וואלה.\" התלמיד: \"כן.\" גיל: \"עכשיו הכרחת אותי לפתוח את המצלמה. רק רגע, ידידי היקר, כי לא יכול להיות שאתה לא תכיר את הדבר הזה. רואה את זה?\" [גיל פונה לתלמיד.] התלמיד: \"כן.\" גיל: \"זה נקרא מד זווית.\"",
     "measure.noAngle":
       "לא נמצאה זווית למדידה. חזור לשלב יצירת הזווית.",
     "measure.lockControlsAria":
@@ -524,11 +524,11 @@ const messages = {
     "measure.visualDescriptionLabel":
       "Visual description:",
     "measure.visualDescription":
-      "Gil turns on his camera, holds a transparent protractor in front of his face, and brings it closer to the camera so Yoni can see its shape and markings.",
+      "Gil turns on his camera, holds a transparent protractor in front of his face, and brings it closer so the student can see its shape and markings.",
     "measure.transcriptLabel":
       "English transcript translation:",
     "measure.transcript":
-      "Yoni: “Oh, a device? No, I’ve never seen one.” Gil: “Really?” Yoni: “Yes.” Gil: “Now you’ve made me turn on my camera, Yoni. One moment, my dear friend, because you have to know this object. Can you see it, Yoni?” Yoni: “Yes.” Gil: “This is called a protractor.”",
+      "Student: “Oh, a device? No, I’ve never seen one.” Gil: “Really.” Student: “Yes.” Gil: “Now you’ve made me turn on my camera. One moment, my dear friend, because you have to know this object. Can you see it?” [Gil addresses the student.] Student: “Yes.” Gil: “This is called a protractor.”",
     "measure.noAngle":
       "No angle was found to measure. Return to the angle construction step.",
     "measure.lockControlsAria":
