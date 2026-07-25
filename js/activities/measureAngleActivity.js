@@ -1,7 +1,7 @@
 const PHYSICAL_PROTRACTOR_LEARNING_MOMENT =
   Object.freeze({
     provider: "youtube",
-    videoId: "-SW1jEGFS6A"
+    videoId: "HxpArMvRFRU"
   });
 
 class MeasureAngleActivity
