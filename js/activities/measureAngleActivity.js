@@ -2,8 +2,8 @@ const PHYSICAL_PROTRACTOR_LEARNING_MOMENT =
   Object.freeze({
     provider: "youtube",
     videoIds: Object.freeze({
-      he: "HxpArMvRFRU",
-      en: "MgjkSBsTDfQ"
+      he: "DSQYoNDz2eA",
+      en: "RcBDAtUqMhw"
     })
   });
 
