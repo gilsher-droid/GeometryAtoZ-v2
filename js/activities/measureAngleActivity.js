@@ -1,7 +1,10 @@
 const PHYSICAL_PROTRACTOR_LEARNING_MOMENT =
   Object.freeze({
     provider: "youtube",
-    videoId: "HxpArMvRFRU"
+    videoIds: Object.freeze({
+      he: "HxpArMvRFRU",
+      en: "MgjkSBsTDfQ"
+    })
   });
 
 class MeasureAngleActivity
@@ -589,9 +592,12 @@ class MeasureAngleActivity
       return "";
     }
 
-    const videoId =
+    const videoIds =
       PHYSICAL_PROTRACTOR_LEARNING_MOMENT
-        .videoId;
+        .videoIds;
+    const videoId =
+      videoIds[i18n.locale] ||
+      videoIds.he;
 
     return (
       "https://www.youtube-nocookie.com/embed/" +
