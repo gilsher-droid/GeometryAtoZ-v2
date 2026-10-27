@@ -19,6 +19,11 @@ class I18n {
   }
 
   getStoredLocale() {
+    const requested = new URLSearchParams(window.location.search).get("lang");
+    if (this.supportedLocales.includes(requested)) {
+      try { window.localStorage.setItem(this.storageKey, requested); } catch (_) {}
+      return requested;
+    }
     try {
       const storedLocale =
         window.localStorage.getItem(
@@ -78,7 +83,7 @@ class I18n {
     document.documentElement.lang =
       this.locale;
     document.documentElement.dir =
-      this.locale === "he"
+      ["he", "ar"].includes(this.locale)
         ? "rtl"
         : "ltr";
   }
@@ -113,7 +118,125 @@ class I18n {
 }
 
 const messages = {
+  ar: {
+    "header.title": "الهندسة من الألف إلى الياء",
+    "header.aria": "الهندسة من الألف إلى الياء من Fundamatics",
+    "header.subtitle": "نتعلّم بناء الادعاءات والتعليلات من خلال الهندسة",
+    "header.home": "العودة إلى Fundamatics",
+    "language.label": "اختر اللغة",
+    "language.hebrew": "עברית",
+    "language.english": "English",
+    "welcome.title": "مرحبًا",
+    "welcome.text": "تبدأ رحلتنا في الهندسة هنا.",
+    "welcome.start": "لنبدأ",
+    "app.noStep": "لم يتم العثور على خطوة في الدرس",
+    "app.progress": "التقدم: ⁦{progress}%⁩",
+    "app.step": "الخطوة ⁦{current}⁩ من ⁦{total}⁩",
+    "app.reflection": "سؤال للتفكير:",
+    "app.previous": "السابق",
+    "app.next": "التالي",
+    "app.finish": "إنهاء",
+    "app.incomplete": "أكمل النشاط قبل المتابعة.",
+    "app.completeTitle": "أكملت الدرس الأول",
+    "app.completeText": "بنيت مفتاح التفكير الأول:",
+    "app.restart": "ابدأ من جديد",
+    "lesson.title": "الدخول إلى عالم الهندسة",
+    "lesson.subtitle": "من نقطة إلى زاوية، وكيف نبني ادعاءً وتعليلًا",
+    "lesson.thinkingKey": "تبدأ الهندسة بالتعريفات.",
+    "lesson.welcome.title": "مرحبًا بك في عالم الهندسة",
+    "lesson.welcome.text": "تبدأ رحلتنا بسؤال بسيط: ممّ تتكوّن الهندسة؟",
+    "lesson.shapes.title": "ما المشترك بين جميع الأشكال؟",
+    "lesson.shapes.text": "انظر إلى المربع والمستطيل والمثلث وشبه المنحرف والسداسي. ما المشترك بينها برأيك؟",
+    "lesson.shapes.prompt": "اكتب تخمينك أو عبّر عنه شفهيًا.",
+    "lesson.point.title": "نقطة",
+    "lesson.point.text": "انقر في أي مكان لإنشاء نقطة.",
+    "lesson.point.instruction": "انقر داخل مساحة العمل لإنشاء نقطة.",
+    "lesson.ray.title": "شعاع",
+    "lesson.ray.text": "يبدأ الشعاع من نقطة ويمتد بلا نهاية في اتجاه واحد.",
+    "lesson.ray.instruction": "ابدأ من النقطة A واسحب في أي اتجاه لإنشاء شعاع.",
+    "lesson.angle.title": "تتكوّن زاوية",
+    "lesson.angle.text": "شعاعان ينطلقان من النقطة نفسها يكوّنان زاوية.",
+    "lesson.angle.instruction": "اسحب من النقطة A في اتجاه جديد لإنشاء شعاع ثانٍ.",
+    "lesson.parts.title": "ما أجزاء الزاوية؟",
+    "lesson.parts.text": "انظر إلى الزاوية التي أنشأتها. حدّد الرأس والشعاعين والمنطقة بينهما.",
+    "lesson.parts.prompt": "صِف الرأس والشعاعين وكيف يكوّنان زاوية.",
+    "lesson.measure.title": "قياس زاوية",
+    "lesson.measure.text": "استخدم المنقلة لقياس الزاوية التي أنشأتها.",
+    "lesson.measure.instruction": "ضع مركز المنقلة على الرأس، وحاذِ خط ⁦0°⁩ مع الشعاع الأول، واقرأ القياس.",
+    "lesson.classify.title": "ما نوع هذه الزاوية؟",
+    "lesson.classify.text": "اختر نوع الزاوية وابنِ ادعاءً مناسبًا.",
+    "lesson.classify.claim": "ادعائي هو:",
+    "lesson.classify.justification": "تعليلي هو:",
+    "lesson.key.title": "مفتاح التفكير الأول",
+    "lesson.key.reflection": "لماذا من المهم تعريف المفاهيم قبل إثبات الادعاءات؟",
+    "lesson.summary.title": "ماذا تعلّمنا؟",
+    "concept.point": "نقطة",
+    "concept.ray": "شعاع",
+    "concept.vertex": "رأس",
+    "concept.angle": "زاوية",
+    "concept.measurement": "قياس الزوايا",
+    "concept.claim": "ادعاء",
+    "concept.justification": "تعليل",
+    "response.defaultLabel": "اكتب إجابتك.",
+    "response.defaultPlaceholder": "اكتب هنا...",
+    "response.answerPlaceholder": "اكتب إجابتك هنا...",
+    "response.save": "احفظ الإجابة",
+    "response.savedButton": "✓ تم حفظ الإجابة",
+    "response.saved": "تم حفظ إجابتك.",
+    "response.autoSaved": "تم الحفظ تلقائيًا",
+    "response.unsaved": "لديك تغييرات لم تُحفظ بعد.",
+    "response.empty": "اكتب إجابة قبل الحفظ.",
+    "question.thinking": "سؤال للتفكير:",
+    "claim.prompt": "ما ادعاؤك؟",
+    "claim.placeholder": "اكتب ادعاءك هنا...",
+    "claim.save": "احفظ الادعاء",
+    "justification.prompt": "كيف يمكنك تعليل ادعائك؟",
+    "justification.placeholder": "اكتب تعليلك هنا...",
+    "justification.save": "احفظ التعليل",
+    "canvas.aria": "مساحة عمل هندسية تفاعلية",
+    "canvas.protractorAria": "منقلة تفاعلية",
+    "construction.point.created": "أنشأت نقطة. يمكنك المتابعة.",
+    "construction.point.missing": "لم تُنشأ نقطة بعد.",
+    "construction.ray.created": "أنشأت شعاعًا. يمكنك المتابعة.",
+    "construction.ray.missing": "لم يُنشأ شعاع بعد.",
+    "construction.originMissing": "لم يتم العثور على نقطة البداية. عُد إلى الخطوة السابقة وأنشئ نقطة.",
+    "construction.pointStepMissing": "لم يتم العثور على نقطة البداية. عُد إلى خطوة النقطة.",
+    "construction.firstRayMissing": "لم يتم العثور على الشعاع الأول. عُد إلى خطوة الشعاع.",
+    "construction.angleMissing": "لم تُنشأ زاوية بعد. أنشئ شعاعًا ثانيًا من النقطة نفسها.",
+    "construction.angleRange": "اختر زاوية بين ⁦{minimum}°⁩ و⁦{maximum}°⁩.",
+    "construction.angleCreated": "أنشأت زاوية قياسها نحو ⁦{degrees}°⁩.",
+    "measure.learningMomentAria": "إثراء اختياري",
+    "measure.learningMomentButton": "شاهد فيديو قصيرًا: كيف تبدو المنقلة الحقيقية (الصوت بالعبرية، والترجمة النصية أدناه)",
+    "measure.videoTitle": "عرض لمنقلة حقيقية",
+    "measure.visualDescriptionLabel": "وصف بصري:",
+    "measure.visualDescription": "يشغّل جيل الكاميرا، ويمسك منقلة شفافة أمام وجهه، ويقرّبها ليرى الطالب شكلها وتدريجاتها.",
+    "measure.transcriptLabel": "ترجمة نص الحوار إلى العربية:",
+    "measure.transcript": "الطالب: «آه، أداة؟ لا، لم أرَ واحدة من قبل». جيل: «حقًا؟». الطالب: «نعم». جيل: «جعلتني الآن أشغّل الكاميرا. لحظة يا صديقي العزيز، لأن عليك أن تعرف هذه الأداة. هل تراها؟». [جيل يخاطب الطالب.] الطالب: «نعم». جيل: «تُسمّى هذه منقلة».",
+    "measure.noAngle": "لم يتم العثور على زاوية لقياسها. عُد إلى خطوة إنشاء الزاوية.",
+    "measure.lockControlsAria": "أدوات تثبيت المنقلة",
+    "measure.answerPrompt": "أدخل قياس الزاوية بعدد صحيح من الدرجات.",
+    "measure.answerPlaceholder": "مثلًا: 65",
+    "measure.check": "تحقق من الإجابة",
+    "measure.lockCenter": "ثبّت على الرأس",
+    "measure.unlockCenter": "حرّر من الرأس",
+    "measure.lockBaseline": "حاذِ وثبّت على الشعاع الأول",
+    "measure.unlockBaseline": "حرّر محاذاة الشعاع",
+    "measure.centerReleased": "تم تحرير تثبيت المركز.",
+    "measure.centerLocked": "مركز المنقلة مثبت على الرأس.",
+    "measure.baselineReleased": "تم تحرير تثبيت خط ⁦0°⁩.",
+    "measure.baselineLocked": "خط ⁦0°⁩ مثبت على الشعاع الأول. اقرأ الزاوية الآن.",
+    "measure.baselineTemporarilySnapped": "انجذب خط ⁦0°⁩ مؤقتًا إلى الشعاع الأول. يمكنك تثبيته.",
+    "measure.positionCenter": "ضع مركز المنقلة على رأس الزاوية.",
+    "measure.alignBaseline": "أدر المنقلة حتى يقع خط ⁦0°⁩ على الشعاع الأول.",
+    "measure.alignFirstRay": "حاذِ خط ⁦0°⁩ مع الشعاع الأول.",
+    "measure.ready": "المنقلة جاهزة للقراءة. ابحث عن موضع تقاطع الشعاع الثاني مع التدريج.",
+    "measure.centerTemporarilySnapped": "انجذب مركز المنقلة مؤقتًا إلى الرأس. يمكنك تثبيته.",
+    "measure.enterAnswer": "أدخل قياس الزاوية بعدد صحيح من الدرجات.",
+    "measure.wrongScale": "تحقق من التدريج الذي يبدأ عند ⁦0°⁩، ثم أدخل القياس بعدد صحيح.",
+    "measure.correct": "القياس صحيح."
+},
   he: {
+    "header.title": "גאומטריה מא׳ עד ת׳",
     "header.aria":
       "Geometry A to Z מבית Fundamatics",
     "header.subtitle":
@@ -345,6 +468,7 @@ const messages = {
   },
 
   en: {
+    "header.title": "Geometry A to Z",
     "header.aria":
       "Geometry A to Z by Fundamatics",
     "header.subtitle":
@@ -518,7 +642,7 @@ const messages = {
     "measure.learningMomentAria":
       "Optional enrichment",
     "measure.learningMomentButton":
-      "Watch a short video: what a real protractor looks like",
+      "Watch a short video: what a real protractor looks like (Hebrew audio, translated transcript below)",
     "measure.videoTitle":
       "A demonstration of a physical protractor",
     "measure.visualDescriptionLabel":

@@ -1,0 +1,8 @@
+/* Keep mathematical models in their original coordinate direction. */
+html[lang="ar"] body { font-family: Tahoma, Arial, sans-serif; }
+.language-switcher { flex-wrap: wrap; }
+.language-option { white-space: nowrap; }
+html[lang="ar"] h1, html[lang="ar"] h2, html[lang="ar"] p { letter-spacing: normal; }
+html[dir="rtl"] input[type="text"] { text-align: start; }
+
+.language-switcher .language-option.is-active { background: #0b3a8a; color: #fff; }

@@ -10,6 +10,8 @@ document.addEventListener(
       false;
 
     function updatePageChrome() {
+      document.querySelector(".product-identity h1").textContent = i18n.t("header.title");
+      document.title = i18n.t("header.title") + " | Fundamatics";
       const appHeader =
         document.getElementById(
           "app-header"
